@@ -25,7 +25,9 @@ public class SecurityConfig {
     /**
      * Cadena de filtros de seguridad.
      * <ul>
-     *   <li>Deshabilita CSRF (API REST sin estado).</li>
+     *   <li>CSRF deshabilitado: esta API REST es de tipo sin estado (stateless) y utiliza
+     *       tokens JWT en cabeceras HTTP, no cookies de sesión, por lo que la protección
+     *       CSRF no es aplicable (los ataques CSRF requieren autenticación basada en cookies).</li>
      *   <li>Gestión de sesión sin estado (STATELESS), preparada para JWT.</li>
      *   <li>Permite acceso público a todos los endpoints de la API.</li>
      * </ul>
@@ -35,6 +37,7 @@ public class SecurityConfig {
      * @throws Exception si se produce algún error de configuración
      */
     @Bean
+    @SuppressWarnings("java:S4502") // CSRF deshabilitado intencionadamente: API REST stateless con JWT
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)

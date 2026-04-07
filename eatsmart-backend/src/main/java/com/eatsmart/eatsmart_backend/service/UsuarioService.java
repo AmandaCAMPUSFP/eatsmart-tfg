@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UsuarioService {
 
+    private static final String ESTADO_ACTIVO = "S";
+
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -69,7 +71,7 @@ public class UsuarioService {
         usuario.setEmail(dto.getEmail());
         usuario.setContrasenaHash(passwordEncoder.encode(dto.getContrasena()));
         usuario.setFechaCreacion(LocalDateTime.now());
-        usuario.setActivo("S");
+        usuario.setActivo(ESTADO_ACTIVO);
 
         return toDTO(usuarioRepository.save(usuario));
     }
