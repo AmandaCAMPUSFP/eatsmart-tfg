@@ -4,7 +4,6 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -14,33 +13,34 @@ public class RecetaDTO {
 
     private Long idReceta;
 
-    @NotBlank(message = "El nombre de la receta no puede estar vacío")
-    @Size(min = 2, max = 150, message = "El nombre debe tener entre 2 y 150 caracteres")
+    @NotBlank(message = "El nombre de la receta es obligatorio")
+    @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
     private String nombre;
 
+    @Size(max = 500, message = "La descripción no puede exceder 500 caracteres")
     private String descripcion;
 
-    @NotNull(message = "Las raciones no pueden ser nulas")
-    @Min(value = 1, message = "Las raciones deben ser mayor a 0")
+    @NotNull(message = "El número de raciones es obligatorio")
+    @Min(value = 1, message = "Debe haber al menos 1 ración")
+    @Max(value = 20, message = "No pueden haber más de 20 raciones")
     private Integer raciones;
 
-    @NotNull(message = "Las calorías totales no pueden ser nulas")
-    @DecimalMin(value = "0.0", message = "Las calorías deben ser mayor o igual a 0")
+    @NotNull(message = "El total de calorías es obligatorio")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Las calorías deben ser mayor a 0")
     private Double totalKcal;
 
-    @NotNull(message = "Las proteínas totales no pueden ser nulas")
-    @DecimalMin(value = "0.0", message = "Las proteínas deben ser mayor o igual a 0")
+    @NotNull(message = "El total de proteínas es obligatorio")
+    @DecimalMin(value = "0.0", message = "Las proteínas no pueden ser negativas")
     private Double totalProteinas;
 
-    @NotNull(message = "Los carbohidratos totales no pueden ser nulos")
-    @DecimalMin(value = "0.0", message = "Los carbohidratos deben ser mayor o igual a 0")
+    @NotNull(message = "El total de carbohidratos es obligatorio")
+    @DecimalMin(value = "0.0", message = "Los carbohidratos no pueden ser negativos")
     private Double totalCarbohidratos;
 
-    @NotNull(message = "Las grasas totales no pueden ser nulas")
-    @DecimalMin(value = "0.0", message = "Las grasas deben ser mayor o igual a 0")
+    @NotNull(message = "El total de grasas es obligatorio")
+    @DecimalMin(value = "0.0", message = "Las grasas no pueden ser negativas")
     private Double totalGrasas;
 
-    private LocalDateTime fechaCreacion;
-
-    private List<Long> alimentoIds;
+    @NotEmpty(message = "La receta debe tener al menos un alimento")
+    private List<Long> idAlimentos; // IDs de alimentos
 }

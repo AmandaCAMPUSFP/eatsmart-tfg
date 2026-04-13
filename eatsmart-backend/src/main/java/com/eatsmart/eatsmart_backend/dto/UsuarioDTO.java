@@ -1,11 +1,9 @@
 package com.eatsmart.eatsmart_backend.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -14,11 +12,14 @@ public class UsuarioDTO {
 
     private Long idUsuario;
 
-    @NotBlank(message = "El email no puede estar vacío")
+    @NotBlank(message = "El email es obligatorio")
     @Email(message = "El email debe ser válido")
     private String email;
 
-    private LocalDateTime fechaCreacion;
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 6, max = 50, message = "La contraseña debe tener entre 6 y 50 caracteres")
+    private String contrasena;
 
+    @Pattern(regexp = "^[SN]$", message = "El estado debe ser 'S' o 'N'")
     private String activo;
 }

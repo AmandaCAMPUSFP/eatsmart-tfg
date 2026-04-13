@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -15,17 +14,18 @@ public class ComidaRegistroDTO {
 
     private Long idComida;
 
-    @NotNull(message = "La fecha no puede ser nula")
-    @PastOrPresent(message = "La fecha debe ser en el pasado o presente")
+    @NotNull(message = "El usuario es obligatorio")
+    private Long idUsuario;
+
+    @NotNull(message = "La fecha es obligatoria")
+    @PastOrPresent(message = "La fecha no puede ser futura")
     private LocalDate fecha;
 
-    @NotBlank(message = "El tipo de comida no puede estar vacío")
+    @NotBlank(message = "El tipo de comida es obligatorio")
+    @Pattern(regexp = "^(Desayuno|Almuerzo|Cena|Snack)$",
+            message = "El tipo debe ser: Desayuno, Almuerzo, Cena o Snack")
     private String tipoComida;
 
-    private LocalDateTime fechaCreacion;
-
-    private Long usuarioId;
-
-    private List<Long> alimentoIds;
-    private List<Long> recetaIds;
+    private List<Long> idAlimentos; // IDs de alimentos
+    private List<Long> idRecetas;   // IDs de recetas
 }
