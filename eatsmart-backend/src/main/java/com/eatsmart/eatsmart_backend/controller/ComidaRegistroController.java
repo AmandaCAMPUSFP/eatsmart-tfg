@@ -2,42 +2,56 @@ package com.eatsmart.eatsmart_backend.controller;
 
 import com.eatsmart.eatsmart_backend.entity.ComidaRegistro;
 import com.eatsmart.eatsmart_backend.service.ComidaRegistroService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/comidas-registro")
+@RequestMapping("/api/comidas")
+@RequiredArgsConstructor
 public class ComidaRegistroController {
 
-    @Autowired
-    private ComidaRegistroService comidaRegistroService;
+    private final ComidaRegistroService comidaService;
 
     @GetMapping
-    public ResponseEntity<List<ComidaRegistro>> obtenerTodos() {
-        List<ComidaRegistro> comidas = comidaRegistroService.obtenerTodos();
-        return ResponseEntity.ok(comidas);
+    public ResponseEntity<List<ComidaRegistro>> obtenerTodas() {
+        return ResponseEntity.ok(comidaService.obtenerTodas());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ComidaRegistro> obtenerPorId(@PathVariable Long id) {
-        Optional<ComidaRegistro> comida = comidaRegistroService.obtenerPorId(id);
-        return comida.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return comidaService.obtenerPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/usuario/{idUsuario}")
+    public ResponseEntity<List<ComidaRegistro>> obtenerPorUsuario(@PathVariable Long idUsuario) {
+        return ResponseEntity.ok(comidaService.obtenerPorUsuario(idUsuario));
+    }
+
+    @GetMapping("/usuario/{idUsuario}/fecha/{fecha}")
+    public ResponseEntity<List<ComidaRegistro>> obtenerPorUsuarioYFecha(
+            @PathVariable Long idUsuario,
+            @PathVariable LocalDate fecha) {
+        return ResponseEntity.ok(comidaService.obtenerPorUsuarioYFecha(idUsuario, fecha));
     }
 
     @PostMapping
-    public ResponseEntity<ComidaRegistro> crear(@RequestBody ComidaRegistro comidaRegistro) {
-        ComidaRegistro comidaGuardada = comidaRegistroService.guardar(comidaRegistro);
-        return ResponseEntity.status(HttpStatus.CREATED).body(comidaGuardada);
+    public ResponseEntity<ComidaRegistro> crear(@RequestBody ComidaRegistro comida) {
+        return ResponseEntity.ok(comidaService.crear(comida));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ComidaRegistro> actualizar(@PathVariable Long id, @RequestBody ComidaRegistro comida) {
+        return ResponseEntity.ok(comidaService.actualizar(id, comida));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        comidaRegistroService.eliminar(id);
+        comidaService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 }

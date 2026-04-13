@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 public class Alimento {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_alimento")
+    @SequenceGenerator(name = "seq_alimento", sequenceName = "SEQ_ALIMENTO", allocationSize = 1)
     @Column(name = "id_alimento")
     private Long idAlimento;
 
@@ -34,4 +36,36 @@ public class Alimento {
 
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
+
+    // ===== LÓGICA DE NEGOCIO =====
+    /**
+     * Calcula los valores nutricionales para una cantidad específica en gramos
+     * @param gramos cantidad del alimento
+     * @return array con [kcal, proteínas, carbohidratos, grasas]
+     */
+    public double[] calcularNutrientes(double gramos) {
+        if (gramos <= 0) {
+            return new double[]{0, 0, 0, 0};
+        }
+
+        double factor = gramos / 100.0;
+        return new double[]{
+                kcal100g != null ? kcal100g * factor : 0,
+                proteinas100g != null ? proteinas100g * factor : 0,
+                carbohidratos100g != null ? carbohidratos100g * factor : 0,
+                grasas100g != null ? grasas100g * factor : 0
+        };
+    }
+
+    /**
+     * Calcula solo las calorías para una cantidad en gramos
+     * @param gramos cantidad del alimento
+     * @return calorías
+     */
+    public Double calcularCaloriasParaGramos(double gramos) {
+        if (gramos <= 0 || kcal100g == null) {
+            return 0.0;
+        }
+        return kcal100g * (gramos / 100.0);
+    }
 }

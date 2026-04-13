@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface ComidaRegistroRepository extends JpaRepository<ComidaRegistro, Long> {
-    List<ComidaRegistro> findByIdUsuarioAndFecha(Long idUsuario, LocalDate fecha);
+    List<ComidaRegistro> findByUsuarioIdUsuario(Long idUsuario);
+    List<ComidaRegistro> findByUsuarioIdUsuarioAndFecha(Long idUsuario, LocalDate fecha);
 }

@@ -2,18 +2,21 @@ package com.eatsmart.eatsmart_backend.service;
 
 import com.eatsmart.eatsmart_backend.entity.Receta;
 import com.eatsmart.eatsmart_backend.repository.RecetaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
+@Transactional
 public class RecetaService {
 
-    @Autowired
-    private RecetaRepository recetaRepository;
+    private final RecetaRepository recetaRepository;
 
-    public List<Receta> obtenerTodos() {
+    public List<Receta> obtenerTodas() {
         return recetaRepository.findAll();
     }
 
@@ -21,8 +24,25 @@ public class RecetaService {
         return recetaRepository.findById(id);
     }
 
-    public Receta guardar(Receta receta) {
+    public Receta crear(Receta receta) {
+        receta.setFechaCreacion(LocalDateTime.now());
         return recetaRepository.save(receta);
+    }
+
+    public Receta actualizar(Long id, Receta recetaActualizada) {
+        return recetaRepository.findById(id)
+                .map(receta -> {
+                    receta.setNombre(recetaActualizada.getNombre());
+                    receta.setDescripcion(recetaActualizada.getDescripcion());
+                    receta.setRaciones(recetaActualizada.getRaciones());
+                    receta.setTotalKcal(recetaActualizada.getTotalKcal());
+                    receta.setTotalProteinas(recetaActualizada.getTotalProteinas());
+                    receta.setTotalCarbohidratos(recetaActualizada.getTotalCarbohidratos());
+                    receta.setTotalGrasas(recetaActualizada.getTotalGrasas());
+                    receta.setAlimentos(recetaActualizada.getAlimentos());
+                    return recetaRepository.save(receta);
+                })
+                .orElseThrow(() -> new RuntimeException("Receta no encontrada"));
     }
 
     public void eliminar(Long id) {
