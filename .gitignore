@@ -29,3 +29,7 @@ application-local.properties
 Thumbs.db
 .AppleDouble
 .LSOverride
+
+# ===== Application profiles =====
+application-local.properties
+application-dev.properties
