@@ -1,0 +1,31 @@
+# ===== IDE =====
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ===== SPRING BOOT / MAVEN =====
+target/
+build/
+.mvn/wrapper/maven-wrapper.jar
+*.log
+application-local.properties
+
+# ===== ENVIRONMENT =====
+.env
+.env.local
+.env.*.local
+
+# ===== GRADLE =====
+.gradle/
+/build/
+
+# ===== SISTEMA =====
+Thumbs.db
+.AppleDouble
+.LSOverride
