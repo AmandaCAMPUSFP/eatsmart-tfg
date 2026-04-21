@@ -1,0 +1,70 @@
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  padding: 20px;
+
+  mat-card {
+    width: 100%;
+    max-width: 450px;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  .logo-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+
+    .logo {
+      max-width: 100px;
+      height: auto;
+    }
+  }
+
+  mat-card-title {
+    text-align: center;
+    color: #047857 !important;
+    font-weight: 700;
+    font-size: 28px;
+  }
+
+  .full-width {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .error-message {
+    color: #dc2626;
+    margin-bottom: 16px;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  button[mat-raised-button] {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    color: #ffffff !important;
+    margin-top: 10px;
+    font-weight: 600;
+  }
+
+  .login-link {
+    text-align: center;
+    margin-top: 20px;
+    color: #6B7280;
+
+    a {
+      color: #059669;
+      text-decoration: none;
+      font-weight: 600;
+
+      &:hover {
+        color: #047857;
+        text-decoration: underline;
+      }
+    }
+  }
+}

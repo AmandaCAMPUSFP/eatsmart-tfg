@@ -1,11 +1,13 @@
 package com.eatsmart.eatsmart_backend.controller;
 
-import com.eatsmart.eatsmart_backend.dto.LoginRequest;
-import com.eatsmart.eatsmart_backend.dto.LoginResponse;
-import com.eatsmart.eatsmart_backend.dto.RegistroRequest;
+import com.eatsmart.eatsmart_backend.dto.AuthRequest;
+import com.eatsmart.eatsmart_backend.dto.AuthResponse;
 import com.eatsmart.eatsmart_backend.entity.Usuario;
-import com.eatsmart.eatsmart_backend.service.UsuarioAuthService;
+import com.eatsmart.eatsmart_backend.security.JwtUtil;
+import com.eatsmart.eatsmart_backend.service.UsuarioService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,53 +16,86 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UsuarioAuthService usuarioAuthService;
+    private final UsuarioService usuarioService;
+    private final JwtUtil jwtUtil;
 
     /**
-     * Registro de nuevo usuario
+     * Endpoint para registrar un nuevo usuario
+     * POST /api/auth/registro
      */
-    @PostMapping("/registrar")
-    public ResponseEntity<Usuario> registrar(@RequestBody RegistroRequest request) {
-        if (request.getEmail() == null || request.getEmail().isEmpty()) {
-            throw new RuntimeException("El email es obligatorio");
-        }
-        if (request.getContrasena() == null || request.getContrasena().length() < 6) {
-            throw new RuntimeException("La contraseña debe tener al menos 6 caracteres");
-        }
+    @PostMapping("/registro")
+    public ResponseEntity<AuthResponse> registro(@Valid @RequestBody AuthRequest authRequest) {
+        try {
+            Usuario usuario = new Usuario();
+            usuario.setEmail(authRequest.getEmail());
+            usuario.setContrasenaHash(authRequest.getContrasena());
 
-        Usuario usuario = usuarioAuthService.registrar(request.getEmail(), request.getContrasena());
-        return ResponseEntity.ok(usuario);
+            Usuario usuarioRegistrado = usuarioService.registrar(usuario);
+            String token = jwtUtil.generarToken(usuarioRegistrado.getEmail());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(
+                    new AuthResponse(
+                            "Usuario registrado exitosamente",
+                            token,
+                            usuarioRegistrado.getIdUsuario(),
+                            usuarioRegistrado.getEmail(),
+                            true
+                    )
+            );
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new AuthResponse(e.getMessage(), false)
+            );
+        }
     }
 
     /**
-     * Login de usuario
+     * Endpoint para iniciar sesión
+     * POST /api/auth/login
      */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-        if (!usuarioAuthService.validarCredenciales(request.getEmail(), request.getContrasena())) {
-            throw new RuntimeException("Email o contraseña incorrectos");
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest authRequest) {
+        try {
+            Usuario usuarioAutenticado = usuarioService.autenticar(
+                    authRequest.getEmail(),
+                    authRequest.getContrasena()
+            );
+
+            String token = jwtUtil.generarToken(usuarioAutenticado.getEmail());
+
+            return ResponseEntity.ok(
+                    new AuthResponse(
+                            "Inicio de sesión exitoso",
+                            token,
+                            usuarioAutenticado.getIdUsuario(),
+                            usuarioAutenticado.getEmail(),
+                            true
+                    )
+            );
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new AuthResponse(e.getMessage(), false)
+            );
         }
-
-        Usuario usuario = usuarioAuthService.obtenerPorEmail(request.getEmail());
-
-        LoginResponse response = new LoginResponse();
-        response.setIdUsuario(usuario.getIdUsuario());
-        response.setEmail(usuario.getEmail());
-        response.setMensaje("Login exitoso");
-
-        return ResponseEntity.ok(response);
     }
 
     /**
-     * Cambiar contraseña
+     * Endpoint para validar un token (test)
+     * GET /api/auth/validar?token=xxx
      */
-    @PostMapping("/cambiar-contrasena/{idUsuario}")
-    public ResponseEntity<String> cambiarContrasena(
-            @PathVariable Long idUsuario,
-            @RequestParam String contrasenaActual,
-            @RequestParam String contrasenaNueva) {
+    @GetMapping("/validar")
+    public ResponseEntity<AuthResponse> validarToken(@RequestParam String token) {
+        boolean esValido = jwtUtil.esTokenValido(token);
 
-        usuarioAuthService.cambiarContrasena(idUsuario, contrasenaActual, contrasenaNueva);
-        return ResponseEntity.ok("Contraseña actualizada correctamente");
+        if (esValido) {
+            String email = jwtUtil.extraerEmail(token);
+            return ResponseEntity.ok(
+                    new AuthResponse("Token válido", email + " autenticado", 0L, email, true)
+            );
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new AuthResponse("Token inválido o expirado", false)
+            );
+        }
     }
 }

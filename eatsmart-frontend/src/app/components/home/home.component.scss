@@ -1,0 +1,136 @@
+.toolbar {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+  padding: 0 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  .toolbar-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .logo {
+      height: 40px;
+      width: auto;
+    }
+
+    .app-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+  }
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  .user-name {
+    color: #ffffff;
+    font-weight: 500;
+    margin-right: 16px;
+  }
+}
+
+.home-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  min-height: calc(100vh - 64px);
+
+  .content {
+    width: 100%;
+    max-width: 1200px;
+
+    h1 {
+      text-align: center;
+      color: #047857;
+      margin-bottom: 10px;
+      font-size: 36px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #059669;
+      margin-bottom: 50px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+  }
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+
+  .feature-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: transform 0.3s, box-shadow 0.3s;
+    background: #ffffff;
+    border: 2px solid #d1fae5;
+
+    &:hover {
+      transform: translateY(-12px);
+      box-shadow: 0 16px 32px rgba(16, 185, 129, 0.2);
+      border-color: #10B981;
+    }
+
+    mat-card-header {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      padding: 24px;
+      border-radius: 12px;
+
+      .large-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: #10B981;
+      }
+    }
+
+    mat-card-title {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 12px;
+      color: #047857;
+      font-weight: 600;
+    }
+
+    mat-card-content {
+      flex: 1;
+      text-align: center;
+      color: #6B7280;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    mat-card-actions {
+      display: flex;
+      justify-content: center;
+
+      button {
+        width: 100%;
+        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+        color: #ffffff !important;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-container .content h1 {
+    font-size: 28px;
+  }
+}

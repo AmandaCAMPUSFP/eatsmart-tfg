@@ -1,0 +1,80 @@
+<mat-toolbar color="primary" class="toolbar">
+  <div class="toolbar-content">
+    <img src="/logoEatSmart.png" alt="EatSmart Logo" class="logo">
+    <span class="app-title">EatSmart</span>
+  </div>
+  <span class="spacer"></span>
+  <span *ngIf="currentUser" class="user-name">{{ 'Bienvenido' }}, {{ currentUser.name }}!</span>
+  <button mat-icon-button [matMenuTriggerFor]="menu">
+    <mat-icon>account_circle</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="setLanguage('es')">
+      <mat-icon>language</mat-icon>
+      <span>Español</span>
+    </button>
+    <button mat-menu-item (click)="setLanguage('en')">
+      <mat-icon>language</mat-icon>
+      <span>English</span>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      <span>{{ t('logout') }}</span>
+    </button>
+  </mat-menu>
+</mat-toolbar>
+
+<div class="home-container">
+  <div class="content">
+    <h1>{{ t('welcome') }}</h1>
+    <p class="subtitle">{{ t('trackMeals') }}</p>
+
+    <div class="cards-grid">
+      <mat-card class="feature-card">
+        <mat-card-header>
+          <mat-icon class="large-icon">restaurant</mat-icon>
+        </mat-card-header>
+        <mat-card-title>{{ t('logMeals') }}</mat-card-title>
+        <mat-card-content>
+          {{ t('trackDailyMeals') }}
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary" (click)="navigateTo('meals')">
+            {{ t('goToMeals') }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <mat-card class="feature-card">
+        <mat-card-header>
+          <mat-icon class="large-icon">bar_chart</mat-icon>
+        </mat-card-header>
+        <mat-card-title>{{ t('analytics') }}</mat-card-title>
+        <mat-card-content>
+          {{ t('viewNutritionStats') }}
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary" (click)="navigateTo('analytics')">
+            {{ t('viewAnalytics') }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <mat-card class="feature-card">
+        <mat-card-header>
+          <mat-icon class="large-icon">settings</mat-icon>
+        </mat-card-header>
+        <mat-card-title>{{ t('settings') }}</mat-card-title>
+        <mat-card-content>
+          {{ t('manageProfile') }}
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary" (click)="navigateTo('settings')">
+            {{ t('goToSettings') }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>

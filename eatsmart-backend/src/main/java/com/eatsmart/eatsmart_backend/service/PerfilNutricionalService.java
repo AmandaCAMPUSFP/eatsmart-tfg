@@ -26,9 +26,11 @@ public class PerfilNutricionalService {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
+        // Asignar manualmente el ID
         perfil.setIdUsuario(idUsuario);
         perfil.setUsuario(usuario);
         perfil.setFechaActualizacion(LocalDateTime.now());
+
         return perfilRepository.save(perfil);
     }
 
