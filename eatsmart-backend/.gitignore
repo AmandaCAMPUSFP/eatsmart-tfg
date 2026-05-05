@@ -29,5 +29,33 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+# ===== SECRETOS - NUNCA EN GIT =====
+.env
+.env.local
+.env.*.local
+*.properties.local
+application-prod.properties
+
+# ===== HERRAMIENTAS =====
 .vscode/
+.idea/
+*.class
+*.jar
+target/
+*.swp
+*.swo
+
+# ===== NODE =====
+node_modules/
+dist/
+.angular/
+
+# ===== SECRETOS Y CONFIGURACIÓN LOCAL =====
+# Nunca subir application.properties con credenciales reales
+eatsmart-backend/src/main/resources/application.properties
+application.properties
+.env
+.env.local
+
+# Sí permitir el ejemplo (sin secretos)
+!eatsmart-backend/src/main/resources/application.properties.example

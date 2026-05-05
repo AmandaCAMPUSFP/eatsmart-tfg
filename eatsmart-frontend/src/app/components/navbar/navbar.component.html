@@ -1,0 +1,40 @@
+<nav class="navbar">
+  <div class="navbar-container">
+    <!-- Logo/Título -->
+    <div class="navbar-brand">
+      <h1>EatSmart</h1>
+    </div>
+
+    <!-- Menú Hamburguesa (Mobile) -->
+    <button class="navbar-toggle" (click)="toggleMenu()" *ngIf="!isAuthenticated()">
+      ☰
+    </button>
+
+    <!-- Menú de Navegación -->
+    <div class="navbar-menu" [class.open]="menuAbierto">
+      <ul class="navbar-nav">
+        <li *ngIf="isAuthenticated()">
+          <a routerLink="/home" (click)="cerrarMenu()">Inicio</a>
+        </li>
+        <li *ngIf="isAuthenticated()">
+          <a routerLink="/comidas" (click)="cerrarMenu()">Mis Comidas</a>
+        </li>
+        <li *ngIf="isAuthenticated()">
+          <a routerLink="/estadisticas" (click)="cerrarMenu()">Estadísticas</a>
+        </li>
+        <li *ngIf="isAuthenticated()">
+          <a routerLink="/alimentos" (click)="cerrarMenu()">Alimentos</a>
+        </li>
+        <li *ngIf="isAuthenticated()">
+          <a routerLink="/perfil" (click)="cerrarMenu()">Mi Perfil</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Usuario y Logout -->
+    <div class="navbar-user" *ngIf="isAuthenticated()">
+      <span class="user-email">{{ usuarioEmail }}</span>
+      <button (click)="logout()" class="btn-logout">Cerrar Sesión</button>
+    </div>
+  </div>
+</nav>

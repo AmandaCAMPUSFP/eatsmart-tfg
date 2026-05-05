@@ -1,117 +1,134 @@
 package com.eatsmart.eatsmart_backend.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@ControllerAdvice
+/**
+ * Manejador global de excepciones
+ * Devuelve respuestas consistentes y loguea errores
+ */
+@Slf4j
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
-     * Maneja ResourceNotFoundException
-     */
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> manejarResourceNotFound(
-            ResourceNotFoundException ex,
-            WebRequest request) {
-
-        Map<String, Object> respuesta = new HashMap<>();
-        respuesta.put("timestamp", LocalDateTime.now());
-        respuesta.put("estado", HttpStatus.NOT_FOUND.value());
-        respuesta.put("error", "Recurso no encontrado");
-        respuesta.put("mensaje", ex.getMessage());
-        respuesta.put("ruta", request.getDescription(false).replace("uri=", ""));
-
-        return new ResponseEntity<>(respuesta, HttpStatus.NOT_FOUND);
-    }
-
-    /**
-     * Maneja errores de validación (@Valid)
+     * Excepciones de validación
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> manejarValidationException(
-            MethodArgumentNotValidException ex,
-            WebRequest request) {
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
 
-        Map<String, String> errores = ex.getBindingResult()
+        Map<String, String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .collect(Collectors.toMap(
                         error -> error.getField(),
-                        error -> error.getDefaultMessage(),
-                        (v1, v2) -> v1
+                        error -> error.getDefaultMessage()
                 ));
 
-        Map<String, Object> respuesta = new HashMap<>();
-        respuesta.put("timestamp", LocalDateTime.now());
-        respuesta.put("estado", HttpStatus.BAD_REQUEST.value());
-        respuesta.put("error", "Error de validación");
-        respuesta.put("errores", errores);
-        respuesta.put("ruta", request.getDescription(false).replace("uri=", ""));
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        response.put("message", "Error de validación");
+        response.put("errors", errors);
 
-        return new ResponseEntity<>(respuesta, HttpStatus.BAD_REQUEST);
+        log.warn("Error de validación en request: {}", errors);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     /**
-     * Maneja errores de autenticación y autorización
+     * Recurso no encontrado
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceNotFound(
+            ResourceNotFoundException ex) {
+
+        log.warn("Recurso no encontrado: {}", ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    /**
+     * Excepciones de seguridad
+     */
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<Map<String, Object>> handleSecurityException(
+            SecurityException ex) {
+
+        log.error("Excepción de seguridad: {}", ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.FORBIDDEN.value());
+        response.put("message", "Acceso denegado");
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    /**
+     * Acceso denegado
      */
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> manejarAccessDenied(
-            AccessDeniedException ex,
-            WebRequest request) {
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(
+            AccessDeniedException ex) {
 
-        Map<String, Object> respuesta = new HashMap<>();
-        respuesta.put("timestamp", LocalDateTime.now());
-        respuesta.put("estado", HttpStatus.FORBIDDEN.value());
-        respuesta.put("error", "Acceso denegado");
-        respuesta.put("mensaje", "No tienes permisos para acceder a este recurso");
-        respuesta.put("ruta", request.getDescription(false).replace("uri=", ""));
+        log.error("Acceso denegado: {}", ex.getMessage());
 
-        return new ResponseEntity<>(respuesta, HttpStatus.FORBIDDEN);
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.FORBIDDEN.value());
+        response.put("message", "No tienes permiso para acceder a este recurso");
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     /**
-     * Maneja RuntimeException genérica
+     * Excepciones de runtime
      */
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> manejarRuntimeException(
-            RuntimeException ex,
-            WebRequest request) {
+    public ResponseEntity<Map<String, Object>> handleRuntimeException(
+            RuntimeException ex) {
 
-        Map<String, Object> respuesta = new HashMap<>();
-        respuesta.put("timestamp", LocalDateTime.now());
-        respuesta.put("estado", HttpStatus.BAD_REQUEST.value());
-        respuesta.put("error", "Error en la operación");
-        respuesta.put("mensaje", ex.getMessage());
-        respuesta.put("ruta", request.getDescription(false).replace("uri=", ""));
+        log.error("Error de runtime: ", ex);
 
-        return new ResponseEntity<>(respuesta, HttpStatus.BAD_REQUEST);
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.put("message", "Error interno del servidor");
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
     /**
-     * Maneja cualquier otra excepción no capturada
+     * Excepciones genéricas
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> manejarGeneralException(
-            Exception ex,
-            WebRequest request) {
+    public ResponseEntity<Map<String, Object>> handleGenericException(
+            Exception ex) {
 
-        Map<String, Object> respuesta = new HashMap<>();
-        respuesta.put("timestamp", LocalDateTime.now());
-        respuesta.put("estado", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        respuesta.put("error", "Error interno del servidor");
-        respuesta.put("mensaje", ex.getMessage());
-        respuesta.put("ruta", request.getDescription(false).replace("uri=", ""));
+        log.error("Error no manejado: ", ex);
 
-        return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.put("message", "Error interno del servidor");
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }

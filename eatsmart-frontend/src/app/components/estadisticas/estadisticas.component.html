@@ -1,0 +1,116 @@
+<div class="estadisticas-container">
+  <h2>Estadísticas Nutricionales</h2>
+
+  <!-- Selector de Fecha -->
+  <div class="fecha-selector">
+    <label>Fecha</label>
+    <input
+      type="date"
+      [(ngModel)]="fechaSeleccionada"
+      (change)="cambiarFecha()"
+      name="fecha">
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    Cargando estadísticas...
+  </div>
+
+  <div *ngIf="!loading && resumenHoy" class="estadisticas-content">
+    <!-- Resumen de Calorías (Principal) -->
+    <div class="caloria-principal" [ngClass]="'estado-' + obtenerEstadoKcal()">
+      <h3>Calorías del Día</h3>
+      <div class="caloria-display">
+        <div class="caloria-consumida">
+          <p class="label">Consumidas</p>
+          <p class="valor">{{ resumenHoy.totalKcal }}</p>
+        </div>
+        <span class="separador">/</span>
+        <div class="caloria-objetivo">
+          <p class="label">Objetivo</p>
+          <p class="valor">{{ resumenHoy.objetivoKcal }}</p>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar" [ngClass]="'estado-' + obtenerEstadoKcal()">
+          <div class="progress-fill" [style.width.%]="obtenerPorcentajeKcal()"></div>
+        </div>
+        <p class="mensaje">{{ obtenerMensajeKcal() }}</p>
+      </div>
+    </div>
+
+    <!-- Grid de Macronutrientes -->
+    <div class="macros-grid">
+      <div class="macro-card proteinas">
+        <h4>Proteínas</h4>
+        <p class="valor">{{ resumenHoy.totalProteinas }}g</p>
+        <p class="calorias">({{ (resumenHoy.totalProteinas * 4) | number:'1.0-0' }} kcal)</p>
+      </div>
+
+      <div class="macro-card carbohidratos">
+        <h4>Carbohidratos</h4>
+        <p class="valor">{{ resumenHoy.totalCarbohidratos }}g</p>
+        <p class="calorias">({{ (resumenHoy.totalCarbohidratos * 4) | number:'1.0-0' }} kcal)</p>
+      </div>
+
+      <div class="macro-card grasas">
+        <h4>Grasas</h4>
+        <p class="valor">{{ resumenHoy.totalGrasas }}g</p>
+        <p class="calorias">({{ (resumenHoy.totalGrasas * 9) | number:'1.0-0' }} kcal)</p>
+      </div>
+    </div>
+
+    <!-- Distribución de Macros -->
+    <div class="distribucion-macros">
+      <h3>Distribución de Macronutrientes</h3>
+      <div class="macros-bar">
+        <div *ngFor="let macro of obtenerDistribucionMacros()"
+             class="macro-segment"
+             [style.width.%]="macro.porcentaje"
+             [style.background-color]="macro.color">
+        </div>
+      </div>
+      <div class="macros-legend">
+        <div *ngFor="let macro of obtenerDistribucionMacros()" class="legend-item">
+          <span class="color-dot" [style.background-color]="macro.color"></span>
+          <span>{{ macro.nombre }}: {{ macro.porcentaje | number:'1.0-0' }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información del Perfil -->
+    <div *ngIf="perfil" class="perfil-info">
+      <h3>Tu Información</h3>
+      <div class="info-grid">
+        <div class="info-card">
+          <label>Sexo</label>
+          <p>{{ perfil.sexo }}</p>
+        </div>
+        <div class="info-card">
+          <label>Edad</label>
+          <p>{{ calcularEdad(perfil.fechaNacimiento) }} años</p>
+        </div>
+        <div class="info-card">
+          <label>Altura</label>
+          <p>{{ perfil.alturaCm }} cm</p>
+        </div>
+        <div class="info-card">
+          <label>Peso</label>
+          <p>{{ perfil.pesoKg }} kg</p>
+        </div>
+        <div class="info-card">
+          <label>Nivel de Actividad</label>
+          <p>{{ perfil.nivelActividad }}</p>
+        </div>
+        <div class="info-card">
+          <label>Objetivo</label>
+          <p>{{ perfil.objetivo }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && !resumenHoy" class="empty-state">
+    <p>No hay datos disponibles para la fecha seleccionada</p>
+  </div>
+</div>

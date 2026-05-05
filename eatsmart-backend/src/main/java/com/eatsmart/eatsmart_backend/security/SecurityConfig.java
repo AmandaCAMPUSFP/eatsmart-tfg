@@ -17,6 +17,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
+/**
+ * Configuración de seguridad de la aplicación.
+ * - Autenticación stateless con JWT (sin sesiones de servidor).
+ * - Hashing de contraseñas con BCrypt.
+ * - CORS configurado para permitir el origen del frontend Angular.
+ * - Endpoints públicos limitados a registro, login y consulta de catálogos (GET).
+ *
+ * Mitiga: OWASP A01 (Broken Access Control), A05 (Security Misconfiguration).
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -25,7 +34,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
-     * Bean de PasswordEncoder para encriptar contraseñas con BCrypt
+     * Bean de PasswordEncoder para encriptar contraseñas con BCrypt.
+     * Mitiga OWASP A02 (Cryptographic Failures) - nunca se almacenan contraseñas en claro.
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -33,54 +43,70 @@ public class SecurityConfig {
     }
 
     /**
-     * Configuración de seguridad HTTP
+     * Cadena de filtros de seguridad HTTP.
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Deshabilitar CSRF (usamos JWT, no sesiones)
+                // CSRF deshabilitado: usamos JWT en lugar de cookies de sesión.
                 .csrf(csrf -> csrf.disable())
 
-                // Habilitar CORS
+                // CORS habilitado para que el frontend Angular pueda llamar a la API.
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // Usar tokens JWT en lugar de sesiones
+                // Sin sesiones HTTP: cada petición lleva su propio token JWT.
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // Configurar qué endpoints son públicos y cuáles requieren autenticación
                 .authorizeHttpRequests(authz -> authz
-                        // Endpoints públicos (sin autenticación)
-                        .requestMatchers("/api/auth/registro", "/api/auth/login", "/api/auth/validar").permitAll()
-                        .requestMatchers("/api/alimentos/**").permitAll() // Catálogo público
-                        .requestMatchers("/api/recetas/**").permitAll()   // Recetas públicas
+                        // ===== ENDPOINTS PÚBLICOS =====
+                        // Solo registro y login son completamente públicos
+                        .requestMatchers("/api/auth/registro", "/api/auth/login").permitAll()
 
-                        // Endpoints privados (requieren autenticación)
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").authenticated()
+                        // Catálogo de alimentos: solo GET es público (consultar)
+                        .requestMatchers(HttpMethod.GET, "/api/alimentos/**").permitAll()
+                        // Crear/modificar/borrar alimentos requiere autenticación
+                        .requestMatchers(HttpMethod.POST, "/api/alimentos/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/alimentos/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/alimentos/**").authenticated()
+
+                        // Catálogo de recetas: solo GET es público
+                        .requestMatchers(HttpMethod.GET, "/api/recetas/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/recetas/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/recetas/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/recetas/**").authenticated()
+
+                        // ===== ENDPOINTS PRIVADOS =====
+                        // Datos personales: SIEMPRE autenticado
+                        .requestMatchers("/api/usuarios/**").authenticated()
                         .requestMatchers("/api/perfiles-nutricionales/**").authenticated()
-                        .requestMatchers("/api/comidas-registro/**").authenticated()
+                        .requestMatchers("/api/comidas/**").authenticated()
 
                         // Cualquier otra petición requiere autenticación
                         .anyRequest().authenticated()
                 )
 
-                // Agregar nuestro filtro JWT antes del filtro de autenticación estándar
+                // Filtro JWT antes del filtro de autenticación estándar
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     /**
-     * Configuración CORS para permitir peticiones desde el frontend
+     * Configuración CORS para permitir peticiones desde el frontend Angular.
+     * En desarrollo: localhost:4200 (puerto por defecto de ng serve).
+     * En producción: añadir el dominio real del frontend desplegado.
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:8080"));
+        // Origen del frontend Angular en desarrollo
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:4200"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

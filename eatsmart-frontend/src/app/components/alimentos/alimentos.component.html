@@ -1,0 +1,79 @@
+<div class="alimentos-container">
+  <h2>Catálogo de Alimentos</h2>
+
+  <!-- Búsqueda -->
+  <div class="busqueda-container">
+    <input
+      type="text"
+      [(ngModel)]="busqueda"
+      (keyup)="buscar()"
+      placeholder="Buscar alimento..."
+      name="busqueda">
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    Cargando alimentos...
+  </div>
+
+  <div *ngIf="!loading && alimentosFiltrados.length === 0" class="empty-state">
+    <p>No se encontraron alimentos</p>
+  </div>
+
+  <!-- Grid de Alimentos -->
+  <div *ngIf="!loading && alimentosFiltrados.length > 0" class="alimentos-grid">
+    <div *ngFor="let alimento of alimentosFiltrados"
+         class="alimento-card"
+         [ngClass]="'categoria-' + obtenerColorCategoria(alimento.kcal100g)">
+
+      <h3>{{ alimento.nombre }}</h3>
+
+      <div class="categoria-badge">
+        {{ obtenerCategoriaAlimento(alimento.kcal100g) }}
+      </div>
+
+      <div class="nutrientes">
+        <div class="nutriente">
+          <label>Kcal/100g</label>
+          <p class="valor">{{ alimento.kcal100g }}</p>
+        </div>
+        <div class="nutriente">
+          <label>Proteínas</label>
+          <p class="valor">{{ alimento.proteinas100g }}g</p>
+        </div>
+        <div class="nutriente">
+          <label>Carbohidratos</label>
+          <p class="valor">{{ alimento.carbohidratos100g }}g</p>
+        </div>
+        <div class="nutriente">
+          <label>Grasas</label>
+          <p class="valor">{{ alimento.grasas100g }}g</p>
+        </div>
+      </div>
+
+      <div class="macro-bar">
+        <div class="macro"
+             style="background: #FF6B6B"
+             [style.width.%]="(alimento.proteinas100g / (alimento.proteinas100g + alimento.carbohidratos100g + alimento.grasas100g)) * 100">
+        </div>
+        <div class="macro"
+             style="background: #4ECDC4"
+             [style.width.%]="(alimento.carbohidratos100g / (alimento.proteinas100g + alimento.carbohidratos100g + alimento.grasas100g)) * 100">
+        </div>
+        <div class="macro"
+             style="background: #FFE66D"
+             [style.width.%]="(alimento.grasas100g / (alimento.proteinas100g + alimento.carbohidratos100g + alimento.grasas100g)) * 100">
+        </div>
+      </div>
+
+      <div class="macro-legend">
+        <span><span class="dot" style="background: #FF6B6B;"></span> Proteína</span>
+        <span><span class="dot" style="background: #4ECDC4;"></span> Carbs</span>
+        <span><span class="dot" style="background: #FFE66D;"></span> Grasas</span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading" class="total-alimentos">
+    Total: {{ alimentosFiltrados.length }} alimentos
+  </div>
+</div>

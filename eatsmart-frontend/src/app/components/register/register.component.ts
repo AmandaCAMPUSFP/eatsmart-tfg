@@ -36,10 +36,23 @@ export class RegisterComponent {
     private router: Router,
     private languageService: LanguageService
   ) {
+    // El formulario debe alinearse con el backend:
+    // - email + contrasena (no 'name', el backend no lo usa)
+    // - contraseña mínimo 8 caracteres + complejidad (mayús, minús, dígito, especial)
+    // - confirmPassword para validación en el cliente
     this.registerForm = this.formBuilder.group({
-      name: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(8),
+          // Al menos 1 mayúscula, 1 minúscula, 1 dígito y 1 carácter especial
+          Validators.pattern(
+            /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':",./<>?]).+$/
+          )
+        ]
+      ],
       confirmPassword: ['', Validators.required]
     }, { validators: this.passwordMatchValidator });
   }
@@ -58,14 +71,15 @@ export class RegisterComponent {
 
   onSubmit() {
     this.submitted = true;
+    this.error = '';
 
     if (this.registerForm.invalid) {
       return;
     }
 
     this.loading = true;
-    this.authService.register(
-      this.f['name'].value,
+    // El método del AuthService se llama 'registrar' y recibe (email, contrasena)
+    this.authService.registrar(
       this.f['email'].value,
       this.f['password'].value
     ).subscribe({
@@ -73,7 +87,8 @@ export class RegisterComponent {
         this.router.navigate(['/home']);
       },
       error: (error) => {
-        this.error = error.error.message || 'Registration failed';
+        // El backend devuelve { mensaje, exitoso } en español
+        this.error = error?.error?.mensaje || 'Error al registrar usuario';
         this.loading = false;
       }
     });

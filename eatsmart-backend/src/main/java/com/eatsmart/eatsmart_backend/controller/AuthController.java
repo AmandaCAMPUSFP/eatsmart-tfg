@@ -4,13 +4,17 @@ import com.eatsmart.eatsmart_backend.dto.AuthRequest;
 import com.eatsmart.eatsmart_backend.dto.AuthResponse;
 import com.eatsmart.eatsmart_backend.entity.Usuario;
 import com.eatsmart.eatsmart_backend.security.JwtUtil;
+import com.eatsmart.eatsmart_backend.service.RateLimitingService;
 import com.eatsmart.eatsmart_backend.service.UsuarioService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -18,20 +22,44 @@ public class AuthController {
 
     private final UsuarioService usuarioService;
     private final JwtUtil jwtUtil;
+    private final RateLimitingService rateLimitingService;
 
     /**
-     * Endpoint para registrar un nuevo usuario
-     * POST /api/auth/registro
+     * Obtener IP del cliente (considera X-Forwarded-For)
+     */
+    private String obtenerIPCliente(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0];
+        }
+        return request.getRemoteAddr();
+    }
+
+    /**
+     * Registrar nuevo usuario
      */
     @PostMapping("/registro")
-    public ResponseEntity<AuthResponse> registro(@Valid @RequestBody AuthRequest authRequest) {
+    public ResponseEntity<AuthResponse> registro(
+            @Valid @RequestBody AuthRequest authRequest,
+            HttpServletRequest request) {
         try {
+            String ip = obtenerIPCliente(request);
+
+            // Rate limiting para registro
+            if (!rateLimitingService.allowRequest(ip + ":registro")) {
+                log.warn("Rate limit alcanzado para registro desde IP: {}", ip);
+                return ResponseEntity.status(429)
+                        .body(new AuthResponse("Demasiados intentos. Intenta más tarde", false));
+            }
+
             Usuario usuario = new Usuario();
             usuario.setEmail(authRequest.getEmail());
             usuario.setContrasenaHash(authRequest.getContrasena());
 
             Usuario usuarioRegistrado = usuarioService.registrar(usuario);
-            String token = jwtUtil.generarToken(usuarioRegistrado.getEmail());
+            String token = jwtUtil.generarToken(usuarioRegistrado.getEmail(), usuarioRegistrado.getIdUsuario());
+
+            log.info("Usuario registrado: {}", usuarioRegistrado.getEmail());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(
                     new AuthResponse(
@@ -43,6 +71,7 @@ public class AuthController {
                     )
             );
         } catch (RuntimeException e) {
+            log.error("Error en registro: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                     new AuthResponse(e.getMessage(), false)
             );
@@ -50,29 +79,60 @@ public class AuthController {
     }
 
     /**
-     * Endpoint para iniciar sesión
-     * POST /api/auth/login
+     * Login de usuario
+     * Rate limiting, refresh token
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest authRequest) {
+    public ResponseEntity<AuthResponse> login(
+            @Valid @RequestBody AuthRequest authRequest,
+            HttpServletRequest request) {
         try {
+            String ip = obtenerIPCliente(request);
+
+            // Rate limiting - Máximo 5 intentos por 5 minutos
+            if (!rateLimitingService.allowRequest(ip)) {
+                log.warn("Rate limit alcanzado para login desde IP: {}", ip);
+                return ResponseEntity.status(429)
+                        .body(new AuthResponse(
+                                "Demasiados intentos. Intenta de nuevo en 5 minutos",
+                                false
+                        ));
+            }
+
             Usuario usuarioAutenticado = usuarioService.autenticar(
                     authRequest.getEmail(),
                     authRequest.getContrasena()
             );
 
-            String token = jwtUtil.generarToken(usuarioAutenticado.getEmail());
-
-            return ResponseEntity.ok(
-                    new AuthResponse(
-                            "Inicio de sesión exitoso",
-                            token,
-                            usuarioAutenticado.getIdUsuario(),
-                            usuarioAutenticado.getEmail(),
-                            true
-                    )
+            String accessToken = jwtUtil.generarToken(
+                    usuarioAutenticado.getEmail(),
+                    usuarioAutenticado.getIdUsuario()
             );
+
+            // Refresh token
+            String refreshToken = jwtUtil.generarRefreshToken(
+                    usuarioAutenticado.getEmail(),
+                    usuarioAutenticado.getIdUsuario()
+            );
+
+            // Limpiar rate limiting tras login exitoso
+            rateLimitingService.resetBucket(ip);
+
+            log.info("Login exitoso: {} desde IP {}", usuarioAutenticado.getEmail(), ip);
+
+            AuthResponse response = new AuthResponse();
+            response.setMensaje("Inicio de sesión exitoso");
+            response.setToken(accessToken);
+            response.setIdUsuario(usuarioAutenticado.getIdUsuario());
+            response.setEmail(usuarioAutenticado.getEmail());
+            response.setExitoso(true);
+            response.setRefreshToken(refreshToken);
+
+            return ResponseEntity.ok(response);
+
+
         } catch (RuntimeException e) {
+            log.warn("Login fallido: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                     new AuthResponse(e.getMessage(), false)
             );
@@ -80,8 +140,43 @@ public class AuthController {
     }
 
     /**
-     * Endpoint para validar un token (test)
-     * GET /api/auth/validar?token=xxx
+     * Endpoint para refrescar token
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@RequestParam String refreshToken) {
+        try {
+            if (!jwtUtil.esTokenValido(refreshToken) || !jwtUtil.esRefreshToken(refreshToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponse("Refresh token inválido", false));
+            }
+
+            String email = jwtUtil.extraerEmail(refreshToken);
+            Long idUsuario = jwtUtil.extraerIdUsuario(refreshToken);
+
+            String nuevoAccessToken = jwtUtil.generarToken(email, idUsuario);
+
+            log.info("Token refrescado para usuario: {}", email);
+
+            AuthResponse response = new AuthResponse();
+            response.setMensaje("Token refrescado");
+            response.setToken(nuevoAccessToken);
+            response.setIdUsuario(idUsuario);
+            response.setEmail(email);
+            response.setExitoso(true);
+            response.setRefreshToken(refreshToken);
+
+            return ResponseEntity.ok(response);
+
+
+        } catch (Exception e) {
+            log.error("Error refrescando token: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResponse("Error refrescando token", false));
+        }
+    }
+
+    /**
+     * Validar token (para debug)
      */
     @GetMapping("/validar")
     public ResponseEntity<AuthResponse> validarToken(@RequestParam String token) {
@@ -89,8 +184,9 @@ public class AuthController {
 
         if (esValido) {
             String email = jwtUtil.extraerEmail(token);
+            Long idUsuario = jwtUtil.extraerIdUsuario(token);
             return ResponseEntity.ok(
-                    new AuthResponse("Token válido", email + " autenticado", 0L, email, true)
+                    new AuthResponse("Token válido", email + " autenticado", idUsuario, email, true)
             );
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(

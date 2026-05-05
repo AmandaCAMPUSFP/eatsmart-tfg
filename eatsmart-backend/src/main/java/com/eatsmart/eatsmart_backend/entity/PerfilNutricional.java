@@ -1,5 +1,6 @@
 package com.eatsmart.eatsmart_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -40,15 +41,17 @@ public class PerfilNutricional {
     private LocalDateTime fechaActualizacion;
 
     // ===== RELACIÓN JPA =====
+    // Relación 1:1 con Usuario, comparte la misma clave primaria (id_usuario).
+    // Se usa @JsonIgnore para evitar el bucle infinito al serializar a JSON
+    // (Usuario -> Perfil -> Usuario -> Perfil...).
     @OneToOne
-    @MapsId
-    @JoinColumn(name = "id_usuario")
+    @JoinColumn(name = "id_usuario", insertable = false, updatable = false)
+    @JsonIgnore
     private Usuario usuario;
 
     // ===== LÓGICA DE NEGOCIO =====
     /**
      * Calcula el índice de masa corporal (IMC)
-     * @return IMC = peso (kg) / (altura (m))^2
      */
     public Double calcularIMC() {
         if (alturaCm == null || pesoKg == null || alturaCm <= 0) {
@@ -59,19 +62,24 @@ public class PerfilNutricional {
     }
 
     /**
-     * Calcula la edad del usuario
-     * @return edad en años
+     * Calcula la edad del usuario teniendo en cuenta mes y día.
      */
     public Integer calcularEdad() {
         if (fechaNacimiento == null) {
             return null;
         }
-        return LocalDate.now().getYear() - fechaNacimiento.getYear();
+        LocalDate hoy = LocalDate.now();
+        int edad = hoy.getYear() - fechaNacimiento.getYear();
+        if (hoy.getMonthValue() < fechaNacimiento.getMonthValue() ||
+                (hoy.getMonthValue() == fechaNacimiento.getMonthValue() &&
+                        hoy.getDayOfMonth() < fechaNacimiento.getDayOfMonth())) {
+            edad--;
+        }
+        return edad;
     }
 
     /**
      * Calcula el metabolismo basal (TMB) usando la fórmula de Harris-Benedict
-     * @return calorías/día
      */
     public Double calcularMetabolismoBasal() {
         if (pesoKg == null || alturaCm == null || fechaNacimiento == null) {
@@ -88,8 +96,6 @@ public class PerfilNutricional {
 
     /**
      * Calcula el gasto calórico total diario (TDEE)
-     * Usa TMB * factor de actividad
-     * @return calorías/día
      */
     public Double calcularGastoCaloricoTotal() {
         Double tmb = calcularMetabolismoBasal();
@@ -111,7 +117,6 @@ public class PerfilNutricional {
 
     /**
      * Calcula el objetivo calórico diario en base al objetivo nutricional
-     * @return calorías/día objetivo
      */
     public Double calcularObjetivoCaloricodiario() {
         Double tdee = calcularGastoCaloricoTotal();
@@ -120,25 +125,24 @@ public class PerfilNutricional {
         }
 
         return switch (objetivo.toLowerCase()) {
-            case "pérdida de peso" -> tdee - 500; // Déficit de 500 kcal
+            case "pérdida de peso" -> tdee - 500;
             case "mantenimiento" -> tdee;
-            case "ganancia muscular" -> tdee + 300; // Superávit de 300 kcal
+            case "ganancia muscular" -> tdee + 300;
             default -> tdee;
         };
     }
 
     /**
      * Calcula la distribución de macronutrientes en base al objetivo
-     * @return array con [proteínas%, carbohidratos%, grasas%]
      */
     public double[] calcularDistribucionMacros() {
         if (objetivo == null) {
-            return new double[]{30, 40, 30}; // Por defecto
+            return new double[]{30, 40, 30};
         }
 
         return switch (objetivo.toLowerCase()) {
-            case "pérdida de peso" -> new double[]{35, 35, 30}; // Más proteína
-            case "ganancia muscular" -> new double[]{30, 40, 30}; // Proteína balanceada
+            case "pérdida de peso" -> new double[]{35, 35, 30};
+            case "ganancia muscular" -> new double[]{30, 40, 30};
             case "mantenimiento" -> new double[]{25, 50, 25};
             default -> new double[]{30, 40, 30};
         };

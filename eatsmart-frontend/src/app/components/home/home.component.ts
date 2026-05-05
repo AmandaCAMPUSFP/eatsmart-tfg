@@ -1,60 +1,103 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
-import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { LanguageService } from '../../services/language.service';
-import { User } from '../../models/user.model';
+import { PerfilService } from '../../services/perfil.service';
+import { ComidasService } from '../../services/comidas.service';
+import { PerfilNutricional } from '../../models/perfil-nutricional.model';
+import { ResumenDiario } from '../../models/comida.model';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatToolbarModule,
-    MatMenuModule,
-    MatDividerModule
-  ],
+  imports: [CommonModule, RouterModule],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-  currentUser: User | null = null;
+  usuarioEmail: string | null = null;
+  perfil: PerfilNutricional | null = null;
+  resumenHoy: ResumenDiario | null = null;
+  loading = true;
 
   constructor(
     private authService: AuthService,
-    private router: Router,
-    private languageService: LanguageService
+    private perfilService: PerfilService,
+    private comidasService: ComidasService
   ) { }
 
-  ngOnInit() {
-    this.authService.currentUser$.subscribe(user => {
-      this.currentUser = user;
+  ngOnInit(): void {
+    this.cargarDatos();
+  }
+
+  cargarDatos(): void {
+    const usuario = this.authService.getUsuario();
+    this.usuarioEmail = usuario?.email || null;
+
+    if (usuario) {
+      // Cargar perfil
+      this.perfilService.obtenerPorId(usuario.idUsuario).subscribe({
+        next: (perfil) => {
+          this.perfil = perfil;
+          this.cargarResumenDia(usuario.idUsuario);
+        },
+        error: (err) => {
+          console.error('Error cargando perfil:', err);
+          this.loading = false;
+        }
+      });
+    }
+  }
+
+  cargarResumenDia(idUsuario: number): void {
+    const fechaHoy = new Date().toISOString().split('T')[0];
+    this.comidasService.obtenerPorUsuarioYFecha(idUsuario, fechaHoy).subscribe({
+      next: (comidas) => {
+        const objetivoKcal = this.perfil ? this.perfilService.calcularObjetivoCalorico(this.perfil) : 0;
+        this.resumenHoy = this.comidasService.calcularResumenDiario(comidas, objetivoKcal);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error cargando comidas:', err);
+        this.loading = false;
+      }
     });
   }
 
-  t(key: any): string {
-    return this.languageService.getTranslation(key);
+  obtenerPorcentajeKcal(): number {
+    if (!this.resumenHoy) return 0;
+    return (this.resumenHoy.totalKcal / this.resumenHoy.objetivoKcal) * 100;
   }
 
-  setLanguage(lang: 'es' | 'en') {
-    this.languageService.setLanguage(lang);
+  obtenerEstadoKcal(): string {
+    const porcentaje = this.obtenerPorcentajeKcal();
+    if (porcentaje < 90) return 'bajo';
+    if (porcentaje > 110) return 'alto';
+    return 'normal';
   }
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
+  /**
+   * Calcula la edad a partir de una fecha de nacimiento.
+   * Tiene en cuenta mes y día (no solo el año).
+   * Si la fecha no es válida, devuelve 0.
+   */
+  calcularEdad(fechaNacimiento: string | Date | null | undefined): number {
+    if (!fechaNacimiento) return 0;
 
-  navigateTo(route: string) {
-    this.router.navigate([`/${route}`]);
+    const nacimiento = new Date(fechaNacimiento);
+    if (isNaN(nacimiento.getTime())) return 0;
+
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+
+    // Ajuste si aún no ha cumplido años este año
+    const mesActual = hoy.getMonth();
+    const mesNacimiento = nacimiento.getMonth();
+    if (mesActual < mesNacimiento ||
+      (mesActual === mesNacimiento && hoy.getDate() < nacimiento.getDate())) {
+      edad--;
+    }
+
+    return edad;
   }
 }

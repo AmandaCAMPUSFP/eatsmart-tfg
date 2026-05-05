@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
  * Filtro JWT que valida tokens en cada petición
  * Se ejecuta una sola vez por request (OncePerRequestFilter)
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -28,36 +30,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         try {
-            // Obtener el token del header Authorization
             String token = extraerToken(request);
 
-            // Si hay token, validarlo
             if (token != null && jwtUtil.esTokenValido(token)) {
-                String email = jwtUtil.extraerEmail(token);
+                // Validar que es un access token
+                if (!jwtUtil.esAccessToken(token)) {
+                    log.warn("Token no es de tipo access");
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
-                // Crear autenticación y establecerla en el contexto de seguridad
+                String email = jwtUtil.extraerEmail(token);
+                Long idUsuario = jwtUtil.extraerIdUsuario(token);
+
+                log.debug("Token válido para usuario: {} (id: {})", email, idUsuario);
+
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(email, null, new ArrayList<>());
+
+                // Agregar ID de usuario en details
+                auth.setDetails(idUsuario);
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (Exception e) {
-            logger.error("Error procesando JWT: " + e.getMessage());
+            log.error("Error procesando JWT: {}", e.getMessage());
         }
 
-        // Continuar con la cadena de filtros
         filterChain.doFilter(request, response);
     }
 
     /**
      * Extrae el token del header Authorization
-     * Espera formato: "Bearer <token>"
+     * Formato esperado: "Bearer <token>"
      */
     private String extraerToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7); // Quita "Bearer " (7 caracteres)
+            return authHeader.substring(7);
         }
 
         return null;
