@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
@@ -33,6 +35,18 @@ public class AuthController {
             return xForwardedFor.split(",")[0];
         }
         return request.getRemoteAddr();
+    }
+
+    /**
+     * Extrae el token del header Authorization (formato "Bearer <token>").
+     * Centralizado para reutilizar en validar y refresh.
+     */
+    private String extraerTokenDelHeader(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
     }
 
     /**
@@ -130,7 +144,6 @@ public class AuthController {
 
             return ResponseEntity.ok(response);
 
-
         } catch (RuntimeException e) {
             log.warn("Login fallido: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
@@ -140,12 +153,18 @@ public class AuthController {
     }
 
     /**
-     * Endpoint para refrescar token
+     * Endpoint para refrescar token.
+     * El refresh token se envía en el cuerpo de la petición (NO en query param),
+     * para evitar que quede registrado en logs, historial o proxies (OWASP A07).
      */
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@RequestParam String refreshToken) {
+    public ResponseEntity<AuthResponse> refresh(@RequestBody Map<String, String> body) {
         try {
-            if (!jwtUtil.esTokenValido(refreshToken) || !jwtUtil.esRefreshToken(refreshToken)) {
+            String refreshToken = body.get("refreshToken");
+
+            if (refreshToken == null
+                    || !jwtUtil.esTokenValido(refreshToken)
+                    || !jwtUtil.esRefreshToken(refreshToken)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new AuthResponse("Refresh token inválido", false));
             }
@@ -167,7 +186,6 @@ public class AuthController {
 
             return ResponseEntity.ok(response);
 
-
         } catch (Exception e) {
             log.error("Error refrescando token: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -176,10 +194,20 @@ public class AuthController {
     }
 
     /**
-     * Validar token (para debug)
+     * Validar token (para debug).
+     * El token se envía en el header Authorization (NO en query param),
+     * evitando que quede registrado en logs, historial o proxies (OWASP A07).
      */
-    @GetMapping("/validar")
-    public ResponseEntity<AuthResponse> validarToken(@RequestParam String token) {
+    @PostMapping("/validar")
+    public ResponseEntity<AuthResponse> validarToken(HttpServletRequest request) {
+        String token = extraerTokenDelHeader(request);
+
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new AuthResponse("Token no proporcionado", false)
+            );
+        }
+
         boolean esValido = jwtUtil.esTokenValido(token);
 
         if (esValido) {

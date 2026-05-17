@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
@@ -94,12 +94,14 @@ export class AuthService {
   }
 
   /**
-   * Refrescar token
+   * Refrescar token.
+   * El refresh token se envía en el CUERPO de la petición (no en query param),
+   * coherente con el backend seguro (OWASP A07).
    */
   refreshToken(refreshToken: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(
-      `${this.apiUrl}/refresh?refreshToken=${refreshToken}`,
-      {}
+      `${this.apiUrl}/refresh`,
+      { refreshToken }
     ).pipe(
       tap(response => {
         if (response.exitoso && this.isBrowser) {
@@ -195,9 +197,12 @@ export class AuthService {
   }
 
   /**
-   * Validar token en backend (para debug)
+   * Validar token en backend (para debug).
+   * El token se envía en el header Authorization (no en query param),
+   * coherente con el backend seguro (OWASP A07).
    */
   validarToken(token: string): Observable<AuthResponse> {
-    return this.http.get<AuthResponse>(`${this.apiUrl}/validar?token=${token}`);
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.post<AuthResponse>(`${this.apiUrl}/validar`, {}, { headers });
   }
 }
