@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,6 +19,7 @@ public class PerfilNutricionalController {
     private final PerfilNutricionalService perfilService;
 
     @GetMapping("/{idUsuario}")
+    @PreAuthorize("@securityService.isOwner(#idUsuario)")
     public ResponseEntity<PerfilNutricional> obtenerPorIdUsuario(@PathVariable Long idUsuario) {
         return perfilService.obtenerPorIdUsuario(idUsuario)
                 .map(ResponseEntity::ok)
@@ -25,6 +27,7 @@ public class PerfilNutricionalController {
     }
 
     @PostMapping("/{idUsuario}")
+    @PreAuthorize("@securityService.isOwner(#idUsuario)")
     public ResponseEntity<PerfilNutricional> crear(
             @PathVariable Long idUsuario,
             @Valid @RequestBody PerfilNutricionalDTO perfilDTO) {
@@ -43,6 +46,7 @@ public class PerfilNutricionalController {
     }
 
     @PutMapping("/{idUsuario}")
+    @PreAuthorize("@securityService.isOwner(#idUsuario)")
     public ResponseEntity<PerfilNutricional> actualizar(
             @PathVariable Long idUsuario,
             @Valid @RequestBody PerfilNutricionalDTO perfilDTO) {
@@ -62,6 +66,7 @@ public class PerfilNutricionalController {
     }
 
     @DeleteMapping("/{idUsuario}")
+    @PreAuthorize("@securityService.isOwner(#idUsuario)")
     public ResponseEntity<Void> eliminar(@PathVariable Long idUsuario) {
         perfilService.obtenerPorIdUsuario(idUsuario)
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil nutricional del usuario " + idUsuario + " no encontrado"));

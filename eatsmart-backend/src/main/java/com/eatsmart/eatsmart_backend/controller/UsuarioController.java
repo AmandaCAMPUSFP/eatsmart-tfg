@@ -8,8 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -18,12 +18,17 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
+    // El listado completo de usuarios queda DESHABILITADO por seguridad.
+    // Exponer todos los usuarios (incluyendo hashes) es una vulnerabilidad
+    // (OWASP A01). Si se necesitase en el futuro, sería un endpoint solo para rol ADMIN.
     @GetMapping
-    public ResponseEntity<List<Usuario>> obtenerTodos() {
-        return ResponseEntity.ok(usuarioService.obtenerTodos());
+    public ResponseEntity<String> obtenerTodos() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Operación no permitida");
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@securityService.isOwner(#id)")
     public ResponseEntity<Usuario> obtenerPorId(@PathVariable Long id) {
         return usuarioService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
@@ -42,6 +47,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@securityService.isOwner(#id)")
     public ResponseEntity<Usuario> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody UsuarioDTO usuarioDTO) {
@@ -57,6 +63,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@securityService.isOwner(#id)")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         usuarioService.obtenerPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario con ID " + id + " no encontrado"));
