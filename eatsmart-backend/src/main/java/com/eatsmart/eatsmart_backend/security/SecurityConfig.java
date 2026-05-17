@@ -1,17 +1,20 @@
 package com.eatsmart.eatsmart_backend.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -22,7 +25,8 @@ import java.util.Arrays;
  * Configuración de seguridad de la aplicación.
  * - Autenticación stateless con JWT (sin sesiones de servidor).
  * - Hashing de contraseñas con BCrypt.
- * - CORS configurado para permitir el origen del frontend Angular.
+ * - CORS configurable mediante variable de entorno (CORS_ORIGINS).
+ * - Cabeceras de seguridad HTTP (CSP, HSTS, X-Frame-Options, etc.).
  * - Endpoints públicos limitados a registro, login y consulta de catálogos (GET).
  *
  * Mitiga: OWASP A01 (Broken Access Control), A05 (Security Misconfiguration).
@@ -34,6 +38,15 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    /**
+     * Orígenes permitidos para CORS, configurables por variable de entorno.
+     * Por defecto, el frontend Angular en desarrollo (localhost:4200).
+     * En producción se define la variable de entorno CORS_ORIGINS
+     * (admite varios separados por coma).
+     */
+    @Value("${app.cors.allowed-origins:http://localhost:4200}")
+    private String allowedOrigins;
 
     /**
      * Bean de PasswordEncoder para encriptar contraseñas con BCrypt.
@@ -59,6 +72,30 @@ public class SecurityConfig {
                 // Sin sesiones HTTP: cada petición lleva su propio token JWT.
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
+                // ===== CABECERAS DE SEGURIDAD (OWASP A05) =====
+                .headers(headers -> headers
+                        // Evita clickjacking: la app no se puede embeber en iframes.
+                        .frameOptions(frame -> frame.deny())
+                        // Evita MIME-sniffing.
+                        .contentTypeOptions(Customizer.withDefaults())
+                        // Fuerza HTTPS durante 1 año (HSTS).
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000))
+                        // Content Security Policy: defensa contra XSS.
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'self'; " +
+                                        "script-src 'self'; " +
+                                        "style-src 'self' 'unsafe-inline'; " +
+                                        "img-src 'self' data:; " +
+                                        "font-src 'self'; " +
+                                        "connect-src 'self'; " +
+                                        "frame-ancestors 'none'"))
+                        // Controla qué información de referencia se envía.
+                        .referrerPolicy(ref -> ref.policy(
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                )
+
                 .authorizeHttpRequests(authz -> authz
                         // ===== ENDPOINTS PÚBLICOS =====
                         // Solo registro y login son completamente públicos
@@ -66,7 +103,6 @@ public class SecurityConfig {
 
                         // Catálogo de alimentos: solo GET es público (consultar)
                         .requestMatchers(HttpMethod.GET, "/api/alimentos/**").permitAll()
-                        // Crear/modificar/borrar alimentos requiere autenticación
                         .requestMatchers(HttpMethod.POST, "/api/alimentos/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/alimentos/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/alimentos/**").authenticated()
@@ -94,17 +130,14 @@ public class SecurityConfig {
     }
 
     /**
-     * Configuración CORS para permitir peticiones desde el frontend Angular.
-     * En desarrollo: localhost:4200 (puerto por defecto de ng serve).
-     * En producción: añadir el dominio real del frontend desplegado.
+     * Configuración CORS. Los orígenes permitidos se leen de la variable
+     * de entorno CORS_ORIGINS (o el valor por defecto localhost:4200).
+     * Admite varios orígenes separados por coma.
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Origen del frontend Angular en desarrollo
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:4200"
-        ));
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
