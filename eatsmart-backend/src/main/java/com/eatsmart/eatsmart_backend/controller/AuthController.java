@@ -5,6 +5,7 @@ import com.eatsmart.eatsmart_backend.dto.AuthResponse;
 import com.eatsmart.eatsmart_backend.entity.Usuario;
 import com.eatsmart.eatsmart_backend.security.JwtUtil;
 import com.eatsmart.eatsmart_backend.service.RateLimitingService;
+import com.eatsmart.eatsmart_backend.service.TokenBlacklistService;
 import com.eatsmart.eatsmart_backend.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -14,6 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.Map;
 
 @Slf4j
@@ -25,6 +29,7 @@ public class AuthController {
     private final UsuarioService usuarioService;
     private final JwtUtil jwtUtil;
     private final RateLimitingService rateLimitingService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * Obtener IP del cliente (considera X-Forwarded-For)
@@ -39,7 +44,6 @@ public class AuthController {
 
     /**
      * Extrae el token del header Authorization (formato "Bearer <token>").
-     * Centralizado para reutilizar en validar y refresh.
      */
     private String extraerTokenDelHeader(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
@@ -59,7 +63,6 @@ public class AuthController {
         try {
             String ip = obtenerIPCliente(request);
 
-            // Rate limiting para registro
             if (!rateLimitingService.allowRequest(ip + ":registro")) {
                 log.warn("Rate limit alcanzado para registro desde IP: {}", ip);
                 return ResponseEntity.status(429)
@@ -94,7 +97,6 @@ public class AuthController {
 
     /**
      * Login de usuario
-     * Rate limiting, refresh token
      */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
@@ -103,7 +105,6 @@ public class AuthController {
         try {
             String ip = obtenerIPCliente(request);
 
-            // Rate limiting - Máximo 5 intentos por 5 minutos
             if (!rateLimitingService.allowRequest(ip)) {
                 log.warn("Rate limit alcanzado para login desde IP: {}", ip);
                 return ResponseEntity.status(429)
@@ -123,13 +124,11 @@ public class AuthController {
                     usuarioAutenticado.getIdUsuario()
             );
 
-            // Refresh token
             String refreshToken = jwtUtil.generarRefreshToken(
                     usuarioAutenticado.getEmail(),
                     usuarioAutenticado.getIdUsuario()
             );
 
-            // Limpiar rate limiting tras login exitoso
             rateLimitingService.resetBucket(ip);
 
             log.info("Login exitoso: {} desde IP {}", usuarioAutenticado.getEmail(), ip);
@@ -154,8 +153,8 @@ public class AuthController {
 
     /**
      * Endpoint para refrescar token.
-     * El refresh token se envía en el cuerpo de la petición (NO en query param),
-     * para evitar que quede registrado en logs, historial o proxies (OWASP A07).
+     * El refresh token se envía en el cuerpo de la petición (NO en query param).
+     * Se rechaza si el token está en la blacklist (logout previo) - OWASP A07.
      */
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@RequestBody Map<String, String> body) {
@@ -167,6 +166,13 @@ public class AuthController {
                     || !jwtUtil.esRefreshToken(refreshToken)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new AuthResponse("Refresh token inválido", false));
+            }
+
+            // Comprobar que el token NO esté invalidado (blacklist)
+            if (tokenBlacklistService.estaInvalidado(refreshToken)) {
+                log.warn("Intento de refresh con token invalidado (blacklist)");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponse("Refresh token revocado", false));
             }
 
             String email = jwtUtil.extraerEmail(refreshToken);
@@ -194,9 +200,43 @@ public class AuthController {
     }
 
     /**
+     * Endpoint de logout.
+     * Invalida el refresh token añadiéndolo a la blacklist, de modo que
+     * no pueda volver a usarse aunque alguien lo hubiera interceptado (OWASP A07).
+     * El refresh token se envía en el cuerpo de la petición.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<AuthResponse> logout(@RequestBody Map<String, String> body) {
+        try {
+            String refreshToken = body.get("refreshToken");
+
+            if (refreshToken == null || !jwtUtil.esTokenValido(refreshToken)) {
+                // Aunque el token no sea válido, respondemos OK:
+                // el objetivo (que no se pueda usar) ya se cumple.
+                return ResponseEntity.ok(new AuthResponse("Sesión cerrada", false));
+            }
+
+            Date fechaExp = jwtUtil.extraerFechaExpiracion(refreshToken);
+            LocalDateTime fechaExpiracion = fechaExp.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+
+            tokenBlacklistService.invalidarToken(refreshToken, fechaExpiracion);
+
+            log.info("Logout: refresh token invalidado correctamente");
+
+            return ResponseEntity.ok(new AuthResponse("Sesión cerrada correctamente", true));
+
+        } catch (Exception e) {
+            log.error("Error en logout: {}", e.getMessage());
+            // Por seguridad, ante cualquier error en logout respondemos OK igualmente
+            return ResponseEntity.ok(new AuthResponse("Sesión cerrada", true));
+        }
+    }
+
+    /**
      * Validar token (para debug).
-     * El token se envía en el header Authorization (NO en query param),
-     * evitando que quede registrado en logs, historial o proxies (OWASP A07).
+     * El token se envía en el header Authorization (NO en query param) - OWASP A07.
      */
     @PostMapping("/validar")
     public ResponseEntity<AuthResponse> validarToken(HttpServletRequest request) {

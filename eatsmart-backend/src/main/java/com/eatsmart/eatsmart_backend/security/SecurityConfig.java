@@ -99,7 +99,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         // ===== ENDPOINTS PÚBLICOS =====
                         // Solo registro y login son completamente públicos
-                        .requestMatchers("/api/auth/registro", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/registro", "/api/auth/login", "/api/auth/logout", "/api/auth/refresh").permitAll()
 
                         // Catálogo de alimentos: solo GET es público (consultar)
                         .requestMatchers(HttpMethod.GET, "/api/alimentos/**").permitAll()
