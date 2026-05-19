@@ -19,9 +19,12 @@ export class PerfilComponent implements OnInit {
     fechaNacimiento: '',
     alturaCm: 0,
     pesoKg: 0,
-    nivelActividad: 'moderado',
-    objetivo: 'mantenimiento'
+    nivelActividad: 'Moderado',
+    objetivo: 'Mantenimiento'
   };
+
+  // Indica si el perfil ya existe (para decidir entre crear o actualizar)
+  perfilExiste = false;
 
   loading = false;
   error = '';
@@ -43,6 +46,7 @@ export class PerfilComponent implements OnInit {
       this.perfilService.obtenerPorId(usuario.idUsuario).subscribe({
         next: (perfil) => {
           this.perfil = perfil;
+          this.perfilExiste = true;
           this.formData = {
             sexo: perfil.sexo,
             fechaNacimiento: perfil.fechaNacimiento,
@@ -54,8 +58,14 @@ export class PerfilComponent implements OnInit {
           this.calcularEstadisticas();
         },
         error: (err) => {
-          console.error('Error cargando perfil:', err);
-          this.error = 'No se pudo cargar el perfil';
+          // 404 = el usuario aún no tiene perfil. No es un error real:
+          // simplemente todavía no lo ha creado.
+          if (err.status === 404) {
+            this.perfilExiste = false;
+          } else {
+            console.error('Error cargando perfil:', err);
+            this.error = 'No se pudo cargar el perfil';
+          }
         }
       });
     }
@@ -67,21 +77,31 @@ export class PerfilComponent implements OnInit {
     this.success = false;
 
     const usuario = this.authService.getUsuario();
-    if (usuario) {
-      this.perfilService.actualizar(usuario.idUsuario, this.formData).subscribe({
-        next: (perfil) => {
-          this.perfil = perfil;
-          this.success = true;
-          this.loading = false;
-          this.calcularEstadisticas();
-          setTimeout(() => this.success = false, 3000);
-        },
-        error: (err) => {
-          this.error = 'Error guardando perfil: ' + err.message;
-          this.loading = false;
-        }
-      });
+    if (!usuario) {
+      this.loading = false;
+      return;
     }
+
+    // Si el perfil ya existe -> actualizar (PUT). Si no -> crear (POST).
+    const peticion = this.perfilExiste
+      ? this.perfilService.actualizar(usuario.idUsuario, this.formData)
+      : this.perfilService.crear(usuario.idUsuario, this.formData);
+
+    peticion.subscribe({
+      next: (perfil) => {
+        this.perfil = perfil;
+        this.perfilExiste = true;
+        this.success = true;
+        this.loading = false;
+        this.calcularEstadisticas();
+        setTimeout(() => this.success = false, 3000);
+      },
+      error: (err) => {
+        const msg = err?.error?.message || err?.message || 'Error desconocido';
+        this.error = 'Error guardando perfil: ' + msg;
+        this.loading = false;
+      }
+    });
   }
 
   calcularEstadisticas(): void {

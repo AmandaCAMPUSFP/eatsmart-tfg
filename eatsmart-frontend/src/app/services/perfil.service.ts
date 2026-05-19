@@ -15,8 +15,8 @@ export class PerfilService {
     return this.http.get<PerfilNutricional>(`${this.apiUrl}/${id}`);
   }
 
-  crear(perfil: PerfilNutricionalDTO): Observable<PerfilNutricional> {
-    return this.http.post<PerfilNutricional>(this.apiUrl, perfil);
+  crear(id: number, perfil: PerfilNutricionalDTO): Observable<PerfilNutricional> {
+    return this.http.post<PerfilNutricional>(`${this.apiUrl}/${id}`, perfil);
   }
 
   actualizar(id: number, perfil: PerfilNutricionalDTO): Observable<PerfilNutricional> {
