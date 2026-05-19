@@ -82,12 +82,6 @@ DB_PASSWORD=tu_contraseña_oracle
 JWT_SECRET=tu_secreto_jwt_minimo_32_caracteres
 ```
 
-Opcional (para producción):
-
-```
-CORS_ORIGINS=https://tu-dominio-frontend.com
-```
-
 > Consulta `eatsmart-backend/src/main/resources/application.properties.example` como referencia.
 
 ### Backend
