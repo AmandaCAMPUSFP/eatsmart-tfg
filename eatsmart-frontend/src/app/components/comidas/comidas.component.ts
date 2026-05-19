@@ -29,11 +29,11 @@ export class ComidasComponent implements OnInit {
   formularioComida: ComidaDTO = {
     idUsuario: 0,
     fecha: new Date().toISOString().split('T')[0],
-    tipoComida: 'desayuno',
+    tipoComida: 'Desayuno',
     idAlimentos: []
   };
 
-  alimentoSeleccionado: Alimento | null = null;
+  alimentoSeleccionadoId: number | null = null;
   cantidadGramos = 100;
 
   constructor(
@@ -79,9 +79,11 @@ export class ComidasComponent implements OnInit {
   }
 
   agregarAlimento(): void {
-    if (this.alimentoSeleccionado && this.formularioComida.idAlimentos) {
-      this.formularioComida.idAlimentos.push(this.alimentoSeleccionado.idAlimento);
-      this.alimentoSeleccionado = null;
+    if (this.alimentoSeleccionadoId != null && this.formularioComida.idAlimentos) {
+      this.formularioComida.idAlimentos.push(this.alimentoSeleccionadoId);
+      this.alimentoSeleccionadoId = null;
+    } else {
+      this.error = 'Selecciona un alimento antes de agregarlo';
     }
   }
 

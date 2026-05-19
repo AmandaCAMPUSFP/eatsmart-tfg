@@ -26,18 +26,18 @@
     <div class="form-group">
       <label>Tipo de Comida</label>
       <select [(ngModel)]="formularioComida.tipoComida" name="tipo">
-        <option value="desayuno">Desayuno</option>
-        <option value="almuerzo">Almuerzo</option>
-        <option value="merienda">Merienda</option>
-        <option value="cena">Cena</option>
+        <option value="Desayuno">Desayuno</option>
+        <option value="Almuerzo">Almuerzo</option>
+        <option value="Snack">Snack</option>
+        <option value="Cena">Cena</option>
       </select>
     </div>
 
     <div class="form-group">
       <label>Alimento</label>
-      <select [(ngModel)]="alimentoSeleccionado" name="alimento">
-        <option [value]="null">-- Seleccionar --</option>
-        <option *ngFor="let alimento of alimentos" [value]="alimento">
+      <select [(ngModel)]="alimentoSeleccionadoId" name="alimento">
+        <option [ngValue]="null">-- Seleccionar --</option>
+        <option *ngFor="let alimento of alimentos" [ngValue]="alimento.idAlimento">
           {{ alimento.nombre }} ({{ alimento.kcal100g }} kcal/100g)
         </option>
       </select>

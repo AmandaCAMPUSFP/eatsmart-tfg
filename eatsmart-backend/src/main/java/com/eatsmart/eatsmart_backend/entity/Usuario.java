@@ -1,5 +1,6 @@
 package com.eatsmart.eatsmart_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +14,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Usuario {
 
     @Id
@@ -26,6 +26,7 @@ public class Usuario {
     private String email;
 
     @Column(name = "contrasena_hash", nullable = false)
+    @JsonIgnore
     private String contrasenaHash;
 
     @Column(name = "fecha_creacion")
@@ -35,9 +36,14 @@ public class Usuario {
     private String activo;
 
     // ===== RELACIONES JPA =====
+    // @JsonIgnore evita la recursión infinita al serializar a JSON
+    // (Usuario -> Comida -> Usuario -> ...). El frontend no necesita
+    // estas relaciones anidadas dentro de la respuesta del usuario.
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private PerfilNutricional perfilNutricional;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<ComidaRegistro> comidasRegistro = new ArrayList<>();
 }
