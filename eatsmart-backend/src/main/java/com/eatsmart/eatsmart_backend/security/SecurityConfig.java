@@ -100,6 +100,8 @@ public class SecurityConfig {
                         // ===== ENDPOINTS PÚBLICOS =====
                         // Solo registro y login son completamente públicos
                         .requestMatchers("/api/auth/registro", "/api/auth/login", "/api/auth/logout", "/api/auth/refresh").permitAll()
+                        // Swagger / OpenAPI: documentación pública de la API
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
                         // Catálogo de alimentos: solo GET es público (consultar)
                         .requestMatchers(HttpMethod.GET, "/api/alimentos/**").permitAll()
