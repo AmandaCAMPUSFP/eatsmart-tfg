@@ -167,6 +167,22 @@
                 <version>3.2.4</version>
             </plugin>
 
+            <!-- OWASP Dependency-Check: análisis de vulnerabilidades en dependencias -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>9.0.9</version>
+                <configuration>
+                    <failBuildOnCVSS>11</failBuildOnCVSS>
+                    <formats>
+                        <format>HTML</format>
+                    </formats>
+                    <skipProvidedScope>true</skipProvidedScope>
+                    <skipRuntimeScope>false</skipRuntimeScope>
+                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                </configuration>
+            </plugin>
+
         </plugins>
 
         <resources>
