@@ -6,11 +6,12 @@ import { PerfilService } from '../../services/perfil.service';
 import { AuthService } from '../../services/auth.service';
 import { ResumenDiario } from '../../models/comida.model';
 import { PerfilNutricional } from '../../models/perfil-nutricional.model';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-estadisticas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './estadisticas.component.html',
   styleUrls: ['./estadisticas.component.scss']
 })

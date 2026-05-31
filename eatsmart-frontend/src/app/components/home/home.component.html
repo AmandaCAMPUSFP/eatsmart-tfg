@@ -1,98 +1,127 @@
-<div class="home-container">
-  <!-- Header de Bienvenida -->
-  <div class="welcome-section">
-    <h1>¡Bienvenido a EatSmart!</h1>
-    <p *ngIf="usuarioEmail" class="user-greeting">Hola, {{ usuarioEmail }}</p>
-  </div>
+<div class="home-page page-container animate-fade-in">
+
+  <!-- Saludo -->
+  <header class="welcome-section">
+    <h1 class="welcome-title">¡Hola{{ usuarioEmail ? ', ' + usuarioEmail.split('@')[0] : '' }}! </h1>
+    <p class="welcome-subtitle">Aquí tienes el resumen de tu día</p>
+  </header>
 
   <!-- Loading -->
   <div *ngIf="loading" class="loading-section">
+    <mat-icon class="spinning">refresh</mat-icon>
     <p>Cargando tu información...</p>
   </div>
 
-  <!-- Contenido Principal -->
+  <!-- Contenido principal -->
   <div *ngIf="!loading" class="home-content">
-    <!-- Resumen del Día -->
-    <div *ngIf="resumenHoy" class="resumen-card">
-      <h2>Hoy</h2>
-      <div class="resumen-grid">
-        <div class="metric" [ngClass]="'estado-' + obtenerEstadoKcal()">
-          <h3>Calorías</h3>
-          <p class="valor">{{ resumenHoy.totalKcal }}</p>
-          <p class="objetivo">/ {{ resumenHoy.objetivoKcal }} kcal</p>
-          <div class="progress-bar">
-            <div class="progress" [style.width.%]="obtenerPorcentajeKcal()"></div>
+
+    <!-- KPI cards -->
+    <section *ngIf="resumenHoy" class="kpi-section">
+      <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-4">
+
+        <div class="kpi-card kpi-primary" [ngClass]="'estado-' + obtenerEstadoKcal()">
+          <div class="kpi-icon">
+            <mat-icon>local_fire_department</mat-icon>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Calorías</span>
+            <span class="kpi-value">{{ resumenHoy.totalKcal }}</span>
+            <span class="kpi-detail">/ {{ resumenHoy.objetivoKcal }} kcal</span>
+            <div class="kpi-progress">
+              <div class="kpi-progress-fill" [style.width.%]="obtenerPorcentajeKcal()"></div>
+            </div>
           </div>
         </div>
 
-        <div class="metric">
-          <h3>Proteínas</h3>
-          <p class="valor">{{ resumenHoy.totalProteinas }}g</p>
-          <p class="detalle">{{ (resumenHoy.totalProteinas * 4) | number:'1.0-0' }} kcal</p>
+        <div class="kpi-card kpi-protein">
+          <div class="kpi-icon"><mat-icon>egg</mat-icon></div>
+          <div class="kpi-content">
+            <span class="kpi-label">Proteínas</span>
+            <span class="kpi-value">{{ resumenHoy.totalProteinas }}<small>g</small></span>
+            <span class="kpi-detail">{{ (resumenHoy.totalProteinas * 4) | number:'1.0-0' }} kcal</span>
+          </div>
         </div>
 
-        <div class="metric">
-          <h3>Carbohidratos</h3>
-          <p class="valor">{{ resumenHoy.totalCarbohidratos }}g</p>
-          <p class="detalle">{{ (resumenHoy.totalCarbohidratos * 4) | number:'1.0-0' }} kcal</p>
+        <div class="kpi-card kpi-carbs">
+          <div class="kpi-icon"><mat-icon>bakery_dining</mat-icon></div>
+          <div class="kpi-content">
+            <span class="kpi-label">Carbohidratos</span>
+            <span class="kpi-value">{{ resumenHoy.totalCarbohidratos }}<small>g</small></span>
+            <span class="kpi-detail">{{ (resumenHoy.totalCarbohidratos * 4) | number:'1.0-0' }} kcal</span>
+          </div>
         </div>
 
-        <div class="metric">
-          <h3>Grasas</h3>
-          <p class="valor">{{ resumenHoy.totalGrasas }}g</p>
-          <p class="detalle">{{ (resumenHoy.totalGrasas * 9) | number:'1.0-0' }} kcal</p>
+        <div class="kpi-card kpi-fats">
+          <div class="kpi-icon"><mat-icon>opacity</mat-icon></div>
+          <div class="kpi-content">
+            <span class="kpi-label">Grasas</span>
+            <span class="kpi-value">{{ resumenHoy.totalGrasas }}<small>g</small></span>
+            <span class="kpi-detail">{{ (resumenHoy.totalGrasas * 9) | number:'1.0-0' }} kcal</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Mi perfil resumen -->
+    <section *ngIf="perfil" class="card profile-card">
+      <header class="card-header">
+        <h2><mat-icon>account_circle</mat-icon> Tu Perfil</h2>
+        <a routerLink="/perfil" class="btn btn-ghost">
+          Editar <mat-icon>arrow_forward</mat-icon>
+        </a>
+      </header>
+      <div class="profile-grid">
+        <div class="profile-item">
+          <span class="profile-label">Edad</span>
+          <span class="profile-value">{{ calcularEdad(perfil.fechaNacimiento) }} años</span>
+        </div>
+        <div class="profile-item">
+          <span class="profile-label">Peso</span>
+          <span class="profile-value">{{ perfil.pesoKg }} kg</span>
+        </div>
+        <div class="profile-item">
+          <span class="profile-label">Altura</span>
+          <span class="profile-value">{{ perfil.alturaCm }} cm</span>
+        </div>
+        <div class="profile-item">
+          <span class="profile-label">Objetivo</span>
+          <span class="profile-value badge badge-primary">{{ perfil.objetivo }}</span>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Información del Perfil -->
-    <div *ngIf="perfil" class="perfil-card">
-      <h2>Tu Perfil</h2>
-      <div class="perfil-info">
-        <div class="info-item">
-          <span class="label">Edad</span>
-          <span class="value">{{ calcularEdad(perfil.fechaNacimiento) }} años</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Peso</span>
-          <span class="value">{{ perfil.pesoKg }} kg</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Altura</span>
-          <span class="value">{{ perfil.alturaCm }} cm</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Objetivo</span>
-          <span class="value">{{ perfil.objetivo }}</span>
-        </div>
-      </div>
-    </div>
+    <!-- Accesos rápidos -->
+    <section class="quick-actions-section">
+      <h2 class="section-title">Accesos rápidos</h2>
+      <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-4">
 
-    <!-- Accesos Rápidos -->
-    <div class="quick-actions">
-      <h2>Accesos Rápidos</h2>
-      <div class="actions-grid">
         <a routerLink="/comidas" class="action-card">
-          <div class="icon">🍽️</div>
+          <div class="action-icon icon-primary"><mat-icon>restaurant</mat-icon></div>
           <h3>Mis Comidas</h3>
           <p>Registra y visualiza tus comidas</p>
         </a>
+
         <a routerLink="/estadisticas" class="action-card">
-          <div class="icon">📊</div>
+          <div class="action-icon icon-accent"><mat-icon>insights</mat-icon></div>
           <h3>Estadísticas</h3>
           <p>Analiza tu consumo nutricional</p>
         </a>
+
         <a routerLink="/alimentos" class="action-card">
-          <div class="icon">🥕</div>
+          <div class="action-icon icon-info"><mat-icon>local_dining</mat-icon></div>
           <h3>Alimentos</h3>
-          <p>Consulta el catálogo de alimentos</p>
+          <p>Consulta el catálogo</p>
         </a>
+
         <a routerLink="/perfil" class="action-card">
-          <div class="icon">👤</div>
+          <div class="action-icon icon-success"><mat-icon>person</mat-icon></div>
           <h3>Mi Perfil</h3>
-          <p>Actualiza tu información personal</p>
+          <p>Actualiza tu información</p>
         </a>
+
       </div>
-    </div>
+    </section>
+
   </div>
 </div>

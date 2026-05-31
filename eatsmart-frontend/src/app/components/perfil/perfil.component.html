@@ -1,81 +1,101 @@
-<div class="perfil-container">
-  <h2>Mi Perfil Nutricional</h2>
+<div class="perfil-page page-container animate-fade-in">
+
+  <header class="page-header">
+    <h1><mat-icon>account_circle</mat-icon> Mi Perfil Nutricional</h1>
+    <p>Configura tus datos para calcular tu plan personalizado</p>
+  </header>
 
   <div *ngIf="error" class="alert alert-error">
-    {{ error }}
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
   </div>
 
   <div *ngIf="success" class="alert alert-success">
-    Perfil actualizado correctamente
+    <mat-icon>check_circle_outline</mat-icon>
+    <span>Perfil actualizado correctamente</span>
   </div>
 
-  <form (ngSubmit)="guardar()" class="perfil-form">
-    <!-- Sexo -->
-    <div class="form-group">
-      <label>Sexo</label>
-      <select [(ngModel)]="formData.sexo" name="sexo" required>
-        <option value="Hombre">Hombre</option>
-        <option value="Mujer">Mujer</option>
-      </select>
-    </div>
+  <div class="perfil-layout">
 
-    <!-- Fecha de Nacimiento -->
-    <div class="form-group">
-      <label>Fecha de Nacimiento</label>
-      <input type="date" [(ngModel)]="formData.fechaNacimiento" name="fecha" required>
-    </div>
+    <!-- Formulario -->
+    <section class="card perfil-form-card">
+      <h2 class="card-section-title">Datos personales</h2>
+      <form (ngSubmit)="guardar()" class="perfil-form">
 
-    <!-- Altura -->
-    <div class="form-group">
-      <label>Altura (cm)</label>
-      <input type="number" [(ngModel)]="formData.alturaCm" name="altura" required min="100" max="250">
-    </div>
+        <div class="grid grid-cols-1 grid-cols-md-2">
+          <div class="form-group">
+            <label class="form-label" for="sexo">Sexo</label>
+            <select id="sexo" class="form-input" [(ngModel)]="formData.sexo" name="sexo" required>
+              <option value="Hombre">Hombre</option>
+              <option value="Mujer">Mujer</option>
+            </select>
+          </div>
 
-    <!-- Peso -->
-    <div class="form-group">
-      <label>Peso (kg)</label>
-      <input type="number" [(ngModel)]="formData.pesoKg" name="peso" required min="20" max="300" step="0.1">
-    </div>
+          <div class="form-group">
+            <label class="form-label" for="fecha">Fecha de Nacimiento</label>
+            <input id="fecha" class="form-input" type="date" [(ngModel)]="formData.fechaNacimiento" name="fecha" required>
+          </div>
 
-    <!-- Nivel de Actividad -->
-    <div class="form-group">
-      <label>Nivel de Actividad</label>
-      <select [(ngModel)]="formData.nivelActividad" name="actividad" required>
-        <option value="Sedentario">Sedentario</option>
-        <option value="Ligero">Ligero</option>
-        <option value="Moderado">Moderado</option>
-        <option value="Intenso">Intenso</option>
-        <option value="Muy intenso">Muy Intenso</option>
-      </select>
-    </div>
+          <div class="form-group">
+            <label class="form-label" for="altura">Altura (cm)</label>
+            <input id="altura" class="form-input" type="number" [(ngModel)]="formData.alturaCm" name="altura" required min="100" max="250">
+          </div>
 
-    <!-- Objetivo -->
-    <div class="form-group">
-      <label>Objetivo</label>
-      <select [(ngModel)]="formData.objetivo" name="objetivo" required>
-        <option value="Pérdida de peso">Pérdida de Peso</option>
-        <option value="Mantenimiento">Mantenimiento</option>
-        <option value="Ganancia muscular">Ganancia Muscular</option>
-      </select>
-    </div>
+          <div class="form-group">
+            <label class="form-label" for="peso">Peso (kg)</label>
+            <input id="peso" class="form-input" type="number" [(ngModel)]="formData.pesoKg" name="peso" required min="20" max="300" step="0.1">
+          </div>
 
-    <button type="submit" [disabled]="loading" class="btn btn-primary">
-      {{ loading ? 'Guardando...' : 'Guardar Perfil' }}
-    </button>
-  </form>
+          <div class="form-group">
+            <label class="form-label" for="actividad">Nivel de Actividad</label>
+            <select id="actividad" class="form-input" [(ngModel)]="formData.nivelActividad" name="actividad" required>
+              <option value="Sedentario">Sedentario</option>
+              <option value="Ligero">Ligero</option>
+              <option value="Moderado">Moderado</option>
+              <option value="Intenso">Intenso</option>
+              <option value="Muy intenso">Muy Intenso</option>
+            </select>
+          </div>
 
-  <!-- Estadísticas -->
-  <div *ngIf="estadisticas.objetivoKcal" class="estadisticas">
-    <h3>Tus Objetivos</h3>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <h4>Calorías Diarias</h4>
-        <p class="stat-value">{{ estadisticas.objetivoKcal }} kcal</p>
+          <div class="form-group">
+            <label class="form-label" for="objetivo">Objetivo</label>
+            <select id="objetivo" class="form-input" [(ngModel)]="formData.objetivo" name="objetivo" required>
+              <option value="Pérdida de peso">Pérdida de Peso</option>
+              <option value="Mantenimiento">Mantenimiento</option>
+              <option value="Ganancia muscular">Ganancia Muscular</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" [disabled]="loading" class="btn btn-primary btn-full mt-6">
+          <mat-icon *ngIf="!loading">save</mat-icon>
+          <span>{{ loading ? 'Guardando...' : 'Guardar Perfil' }}</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Estadísticas -->
+    <aside *ngIf="estadisticas.objetivoKcal" class="estadisticas-aside">
+      <h2 class="card-section-title">Tus objetivos</h2>
+
+      <div class="stat-card stat-primary">
+        <div class="stat-icon"><mat-icon>local_fire_department</mat-icon></div>
+        <div class="stat-content">
+          <span class="stat-label">Calorías Diarias</span>
+          <span class="stat-value">{{ estadisticas.objetivoKcal }}</span>
+          <span class="stat-unit">kcal</span>
+        </div>
       </div>
-      <div class="stat-card">
-        <h4>IMC</h4>
-        <p class="stat-value">{{ estadisticas.imc }}</p>
+
+      <div class="stat-card stat-accent">
+        <div class="stat-icon"><mat-icon>monitor_weight</mat-icon></div>
+        <div class="stat-content">
+          <span class="stat-label">IMC</span>
+          <span class="stat-value">{{ estadisticas.imc }}</span>
+          <span class="stat-unit">kg/m²</span>
+        </div>
       </div>
-    </div>
+    </aside>
+
   </div>
 </div>

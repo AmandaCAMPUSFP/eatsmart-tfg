@@ -1,79 +1,87 @@
-<div class="alimentos-container">
-  <h2>Catálogo de Alimentos</h2>
+<div class="alimentos-page page-container animate-fade-in">
+
+  <header class="page-header">
+    <h1><mat-icon>local_dining</mat-icon> Catálogo de Alimentos</h1>
+    <p>Consulta los valores nutricionales de tus alimentos</p>
+  </header>
 
   <!-- Búsqueda -->
-  <div class="busqueda-container">
+  <div class="search-container">
+    <mat-icon class="search-icon">search</mat-icon>
     <input
       type="text"
+      class="search-input"
       [(ngModel)]="busqueda"
       (keyup)="buscar()"
       placeholder="Buscar alimento..."
       name="busqueda">
   </div>
 
-  <div *ngIf="loading" class="loading">
-    Cargando alimentos...
+  <div *ngIf="loading" class="loading-state">
+    <mat-icon class="spinning">refresh</mat-icon>
+    <p>Cargando alimentos...</p>
   </div>
 
   <div *ngIf="!loading && alimentosFiltrados.length === 0" class="empty-state">
+    <mat-icon>search_off</mat-icon>
     <p>No se encontraron alimentos</p>
   </div>
 
-  <!-- Grid de Alimentos -->
-  <div *ngIf="!loading && alimentosFiltrados.length > 0" class="alimentos-grid">
-    <div *ngFor="let alimento of alimentosFiltrados"
-         class="alimento-card"
-         [ngClass]="'categoria-' + obtenerColorCategoria(alimento.kcal100g)">
+  <!-- Grid de alimentos -->
+  <div *ngIf="!loading && alimentosFiltrados.length > 0" class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3 alimentos-grid">
+    <article *ngFor="let alimento of alimentosFiltrados"
+             class="alimento-card"
+             [ngClass]="'cat-' + obtenerColorCategoria(alimento.kcal100g)">
 
-      <h3>{{ alimento.nombre }}</h3>
+      <header class="alimento-header">
+        <h3>{{ alimento.nombre }}</h3>
+        <span class="alimento-badge">{{ obtenerCategoriaAlimento(alimento.kcal100g) }}</span>
+      </header>
 
-      <div class="categoria-badge">
-        {{ obtenerCategoriaAlimento(alimento.kcal100g) }}
+      <div class="alimento-kcal">
+        <mat-icon>local_fire_department</mat-icon>
+        <span class="kcal-value">{{ alimento.kcal100g }}</span>
+        <span class="kcal-unit">kcal / 100g</span>
       </div>
 
-      <div class="nutrientes">
+      <div class="nutrientes-grid">
         <div class="nutriente">
-          <label>Kcal/100g</label>
-          <p class="valor">{{ alimento.kcal100g }}</p>
-        </div>
-        <div class="nutriente">
-          <label>Proteínas</label>
-          <p class="valor">{{ alimento.proteinas100g }}g</p>
+          <span class="nut-label">Proteínas</span>
+          <span class="nut-value">{{ alimento.proteinas100g }}g</span>
         </div>
         <div class="nutriente">
-          <label>Carbohidratos</label>
-          <p class="valor">{{ alimento.carbohidratos100g }}g</p>
+          <span class="nut-label">Carbohidratos</span>
+          <span class="nut-value">{{ alimento.carbohidratos100g }}g</span>
         </div>
         <div class="nutriente">
-          <label>Grasas</label>
-          <p class="valor">{{ alimento.grasas100g }}g</p>
-        </div>
-      </div>
-
-      <div class="macro-bar">
-        <div class="macro"
-             style="background: #FF6B6B"
-             [style.width.%]="(alimento.proteinas100g / (alimento.proteinas100g + alimento.carbohidratos100g + alimento.grasas100g)) * 100">
-        </div>
-        <div class="macro"
-             style="background: #4ECDC4"
-             [style.width.%]="(alimento.carbohidratos100g / (alimento.proteinas100g + alimento.carbohidratos100g + alimento.grasas100g)) * 100">
-        </div>
-        <div class="macro"
-             style="background: #FFE66D"
-             [style.width.%]="(alimento.grasas100g / (alimento.proteinas100g + alimento.carbohidratos100g + alimento.grasas100g)) * 100">
+          <span class="nut-label">Grasas</span>
+          <span class="nut-value">{{ alimento.grasas100g }}g</span>
         </div>
       </div>
 
-      <div class="macro-legend">
-        <span><span class="dot" style="background: #FF6B6B;"></span> Proteína</span>
-        <span><span class="dot" style="background: #4ECDC4;"></span> Carbs</span>
-        <span><span class="dot" style="background: #FFE66D;"></span> Grasas</span>
+      <div class="macro-distribution">
+        <div class="macro-bar">
+          <div class="macro-seg seg-protein"
+               [style.width.%]="(alimento.proteinas100g / (alimento.proteinas100g + alimento.carbohidratos100g + alimento.grasas100g)) * 100">
+          </div>
+          <div class="macro-seg seg-carbs"
+               [style.width.%]="(alimento.carbohidratos100g / (alimento.proteinas100g + alimento.carbohidratos100g + alimento.grasas100g)) * 100">
+          </div>
+          <div class="macro-seg seg-fats"
+               [style.width.%]="(alimento.grasas100g / (alimento.proteinas100g + alimento.carbohidratos100g + alimento.grasas100g)) * 100">
+          </div>
+        </div>
+        <div class="macro-legend">
+          <span class="legend-item"><span class="dot dot-protein"></span> Prot</span>
+          <span class="legend-item"><span class="dot dot-carbs"></span> Carb</span>
+          <span class="legend-item"><span class="dot dot-fats"></span> Gras</span>
+        </div>
       </div>
-    </div>
+    </article>
   </div>
 
-  <div *ngIf="!loading" class="total-alimentos">
-    Total: {{ alimentosFiltrados.length }} alimentos
+  <div *ngIf="!loading" class="total-info">
+    <mat-icon>info_outline</mat-icon>
+    <span>{{ alimentosFiltrados.length }} alimentos encontrados</span>
   </div>
 </div>

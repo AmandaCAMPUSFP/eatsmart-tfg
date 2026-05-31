@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlimentosService } from '../../services/alimentos.service';
 import { Alimento } from '../../models/alimento.model';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-alimentos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './alimentos.component.html',
   styleUrls: ['./alimentos.component.scss']
 })

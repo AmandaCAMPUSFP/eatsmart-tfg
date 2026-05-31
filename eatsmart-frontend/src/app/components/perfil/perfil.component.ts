@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { PerfilService } from '../../services/perfil.service';
 import { PerfilNutricional, PerfilNutricionalDTO } from '../../models/perfil-nutricional.model';
 import { AuthService } from '../../services/auth.service';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './perfil.component.html',
   styleUrls: ['./perfil.component.scss']
 })

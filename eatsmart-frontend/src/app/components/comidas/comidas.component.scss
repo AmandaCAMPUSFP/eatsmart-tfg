@@ -1,217 +1,201 @@
-.comidas-container {
-  max-width: 900px;
-  margin: 2rem auto;
-  padding: 2rem;
+.comidas-page {
+  min-height: calc(100vh - var(--navbar-height));
+}
 
-  h2 {
-    color: #333;
-    margin-bottom: 2rem;
-    text-align: center;
-  }
+.page-header {
+  margin-bottom: var(--space-6);
 
-  .alert {
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 4px;
-
-    &.alert-error {
-      background: #fee;
-      color: #c33;
-      border-left: 4px solid #c33;
-    }
-
-    &.alert-success {
-      background: #efe;
-      color: #3c3;
-      border-left: 4px solid #3c3;
-    }
-  }
-
-  .fecha-selector {
-    margin-bottom: 2rem;
+  h1 {
     display: flex;
-    gap: 1rem;
     align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-extrabold);
+    margin: 0 0 var(--space-2) 0;
 
-    label {
-      font-weight: 600;
+    mat-icon {
+      color: var(--color-primary);
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
     }
 
-    input {
-      padding: 0.5rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-  }
-
-  .agregar-comida {
-    background: #f9f9f9;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-
-    h3 {
-      color: #333;
-      margin-bottom: 1rem;
-    }
-
-    .form-group {
-      margin-bottom: 1rem;
-
-      label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #333;
-      }
-
-      input, select {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-
-        &:focus {
-          outline: none;
-          border-color: #4CAF50;
-          box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
-        }
-      }
-    }
-
-    .button-group {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
+    @media (min-width: 768px) {
+      font-size: var(--font-size-3xl);
     }
   }
 
-  .resumen {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  p {
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+}
 
-    h3 {
-      color: #333;
-      margin-bottom: 1rem;
-    }
+.alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
+  mat-icon { flex-shrink: 0; }
+}
 
-      .stat-card {
-        background: #f9f9f9;
-        padding: 1rem;
-        border-radius: 8px;
-        text-align: center;
+.fecha-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 
-        h4 {
-          color: #666;
-          margin-bottom: 0.5rem;
-          font-size: 0.9rem;
-        }
-
-        .stat-value {
-          font-size: 1.5rem;
-          font-weight: bold;
-          color: #4CAF50;
-          margin-bottom: 0.5rem;
-        }
-
-        .progress-bar {
-          height: 8px;
-          background: #eee;
-          border-radius: 4px;
-          overflow: hidden;
-
-          .progress {
-            height: 100%;
-            background: #4CAF50;
-            transition: width 0.3s;
-          }
-        }
-      }
-    }
+  .form-label {
+    margin: 0;
+    white-space: nowrap;
+    font-weight: var(--font-weight-semibold);
   }
 
-  .comidas-registradas {
-    h3 {
-      color: #333;
-      margin-bottom: 1rem;
-    }
+  .form-input {
+    flex: 1;
+    max-width: 240px;
+  }
+}
 
-    .empty-state {
-      text-align: center;
-      padding: 2rem;
-      color: #999;
-    }
+.section-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 var(--space-5) 0;
+}
 
-    .comida-card {
-      background: white;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.resumen-section {
+  margin-bottom: var(--space-8);
+}
 
-      h4 {
-        color: #333;
-        margin: 0;
-      }
-    }
+/* KPI cards (mismo estilo que home) */
+.kpi-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+
+  mat-icon { font-size: 28px; width: 28px; height: 28px; }
+}
+
+.kpi-content { display: flex; flex-direction: column; flex: 1; }
+.kpi-label { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.kpi-value { font-size: var(--font-size-3xl); font-weight: var(--font-weight-extrabold); color: var(--color-text); line-height: 1.2; margin-top: var(--space-1); small { font-size: var(--font-size-lg); color: var(--color-text-muted); } }
+.kpi-detail { font-size: var(--font-size-sm); color: var(--color-text-muted); margin-top: var(--space-1); }
+.kpi-progress { height: 6px; background: var(--color-border-light); border-radius: var(--radius-full); overflow: hidden; margin-top: var(--space-3); }
+.kpi-progress-fill { height: 100%; background: var(--color-primary); transition: width var(--transition-slow); }
+.kpi-primary .kpi-icon { background: var(--color-primary-light); color: var(--color-primary-dark); }
+.kpi-protein .kpi-icon { background: #FEE2E2; color: #DC2626; }
+.kpi-carbs .kpi-icon { background: #CFFAFE; color: #0891B2; }
+.kpi-fats .kpi-icon { background: #FEF3C7; color: #D97706; }
+
+/* === LAYOUT FORMULARIO + LISTA === */
+.comidas-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 380px 1fr;
+  }
+}
+
+.card-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 var(--space-5) 0;
+
+  mat-icon { color: var(--color-primary); }
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+/* === LISTA COMIDAS === */
+.empty-state {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--color-text-muted);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: var(--color-text-light);
+    margin-bottom: var(--space-3);
   }
 
-  .btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s;
+  p { margin: 0; }
+}
 
-    &.btn-primary {
-      background: #4CAF50;
-      color: white;
+.comidas-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
 
-      &:hover:not(:disabled) {
-        background: #45a049;
-      }
+.comida-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  transition: all var(--transition-fast);
 
-      &:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-      }
-    }
+  &:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-border);
+  }
+}
 
-    &.btn-secondary {
-      background: #2196F3;
-      color: white;
+.comida-badge {
+  display: inline-flex;
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-full);
+}
 
-      &:hover {
-        background: #0b7dda;
-      }
-    }
+.btn-icon-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  background: transparent;
+  transition: background var(--transition-fast);
 
-    &.btn-danger {
-      background: #f44336;
-      color: white;
-
-      &:hover {
-        background: #da190b;
-      }
-    }
-
-    &.btn-small {
-      padding: 0.5rem 1rem;
-      font-size: 0.9rem;
-    }
+  &:hover {
+    background: var(--color-error-light);
   }
 }

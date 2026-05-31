@@ -6,11 +6,12 @@ import { PerfilService } from '../../services/perfil.service';
 import { ComidasService } from '../../services/comidas.service';
 import { PerfilNutricional } from '../../models/perfil-nutricional.model';
 import { ResumenDiario } from '../../models/comida.model';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, MatIconModule],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })

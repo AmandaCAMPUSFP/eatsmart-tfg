@@ -1,100 +1,137 @@
-<div class="comidas-container">
-  <h2>Registro de Comidas</h2>
+<div class="comidas-page page-container animate-fade-in">
+
+  <header class="page-header">
+    <h1><mat-icon>restaurant</mat-icon> Registro de Comidas</h1>
+    <p>Anota lo que comes y haz seguimiento de tu objetivo diario</p>
+  </header>
 
   <div *ngIf="error" class="alert alert-error">
-    {{ error }}
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
   </div>
 
   <div *ngIf="success" class="alert alert-success">
-    Comida registrada correctamente
+    <mat-icon>check_circle_outline</mat-icon>
+    <span>Comida registrada correctamente</span>
   </div>
 
-  <!-- Selector de Fecha -->
-  <div class="fecha-selector">
-    <label>Fecha</label>
-    <input
-      type="date"
-      [(ngModel)]="formularioComida.fecha"
-      (change)="cambiarFecha()"
-      name="fecha">
+  <!-- Selector de fecha -->
+  <div class="fecha-card card">
+    <label class="form-label" for="fecha">Fecha</label>
+    <input id="fecha" class="form-input" type="date"
+           [(ngModel)]="formularioComida.fecha"
+           (change)="cambiarFecha()"
+           name="fecha">
   </div>
 
-  <!-- Agregar Comida -->
-  <div class="agregar-comida">
-    <h3>Agregar Comida</h3>
+  <!-- Resumen del día -->
+  <section *ngIf="resumenDiario" class="resumen-section">
+    <h2 class="section-title">Resumen del día</h2>
+    <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-4">
 
-    <div class="form-group">
-      <label>Tipo de Comida</label>
-      <select [(ngModel)]="formularioComida.tipoComida" name="tipo">
-        <option value="Desayuno">Desayuno</option>
-        <option value="Almuerzo">Almuerzo</option>
-        <option value="Snack">Snack</option>
-        <option value="Cena">Cena</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label>Alimento</label>
-      <select [(ngModel)]="alimentoSeleccionadoId" name="alimento">
-        <option [ngValue]="null">-- Seleccionar --</option>
-        <option *ngFor="let alimento of alimentos" [ngValue]="alimento.idAlimento">
-          {{ alimento.nombre }} ({{ alimento.kcal100g }} kcal/100g)
-        </option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label>Cantidad (gramos)</label>
-      <input type="number" [(ngModel)]="cantidadGramos" name="cantidad" min="1">
-    </div>
-
-    <div class="button-group">
-      <button (click)="agregarAlimento()" class="btn btn-secondary">
-        Agregar Alimento
-      </button>
-      <button (click)="guardarComida()" [disabled]="loading" class="btn btn-primary">
-        {{ loading ? 'Guardando...' : 'Guardar Comida' }}
-      </button>
-    </div>
-  </div>
-
-  <!-- Resumen del Día -->
-  <div *ngIf="resumenDiario" class="resumen">
-    <h3>Resumen del Día</h3>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <h4>Calorías</h4>
-        <p class="stat-value">{{ resumenDiario.totalKcal }} / {{ resumenDiario.objetivoKcal }} kcal</p>
-        <div class="progress-bar">
-          <div class="progress" [style.width.%]="(resumenDiario.totalKcal / resumenDiario.objetivoKcal) * 100"></div>
+      <div class="kpi-card kpi-primary">
+        <div class="kpi-icon"><mat-icon>local_fire_department</mat-icon></div>
+        <div class="kpi-content">
+          <span class="kpi-label">Calorías</span>
+          <span class="kpi-value">{{ resumenDiario.totalKcal }}</span>
+          <span class="kpi-detail">/ {{ resumenDiario.objetivoKcal }} kcal</span>
+          <div class="kpi-progress">
+            <div class="kpi-progress-fill" [style.width.%]="(resumenDiario.totalKcal / resumenDiario.objetivoKcal) * 100"></div>
+          </div>
         </div>
       </div>
-      <div class="stat-card">
-        <h4>Proteínas</h4>
-        <p class="stat-value">{{ resumenDiario.totalProteinas }}g</p>
-      </div>
-      <div class="stat-card">
-        <h4>Carbohidratos</h4>
-        <p class="stat-value">{{ resumenDiario.totalCarbohidratos }}g</p>
-      </div>
-      <div class="stat-card">
-        <h4>Grasas</h4>
-        <p class="stat-value">{{ resumenDiario.totalGrasas }}g</p>
-      </div>
-    </div>
-  </div>
 
-  <!-- Comidas Registradas -->
-  <div class="comidas-registradas">
-    <h3>Comidas Registradas</h3>
-    <div *ngIf="comidas.length === 0" class="empty-state">
-      No hay comidas registradas para esta fecha
+      <div class="kpi-card kpi-protein">
+        <div class="kpi-icon"><mat-icon>egg</mat-icon></div>
+        <div class="kpi-content">
+          <span class="kpi-label">Proteínas</span>
+          <span class="kpi-value">{{ resumenDiario.totalProteinas }}<small>g</small></span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-carbs">
+        <div class="kpi-icon"><mat-icon>bakery_dining</mat-icon></div>
+        <div class="kpi-content">
+          <span class="kpi-label">Carbohidratos</span>
+          <span class="kpi-value">{{ resumenDiario.totalCarbohidratos }}<small>g</small></span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-fats">
+        <div class="kpi-icon"><mat-icon>opacity</mat-icon></div>
+        <div class="kpi-content">
+          <span class="kpi-label">Grasas</span>
+          <span class="kpi-value">{{ resumenDiario.totalGrasas }}<small>g</small></span>
+        </div>
+      </div>
+
     </div>
-    <div *ngFor="let comida of comidas" class="comida-card">
-      <h4>{{ comida.tipoComida | uppercase }}</h4>
-      <button (click)="eliminarComida(comida.idComida)" class="btn btn-danger btn-small">
-        Eliminar
-      </button>
-    </div>
+  </section>
+
+  <!-- Layout principal: formulario + comidas registradas -->
+  <div class="comidas-layout">
+
+    <!-- Formulario -->
+    <section class="card form-card">
+      <h2 class="card-section-title"><mat-icon>add_circle</mat-icon> Agregar comida</h2>
+
+      <div class="form-group">
+        <label class="form-label">Tipo de comida</label>
+        <select class="form-input" [(ngModel)]="formularioComida.tipoComida" name="tipo">
+          <option value="Desayuno">Desayuno</option>
+          <option value="Almuerzo">Almuerzo</option>
+          <option value="Snack">Snack</option>
+          <option value="Cena">Cena</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Alimento</label>
+        <select class="form-input" [(ngModel)]="alimentoSeleccionadoId" name="alimento">
+          <option [ngValue]="null">-- Seleccionar --</option>
+          <option *ngFor="let alimento of alimentos" [ngValue]="alimento.idAlimento">
+            {{ alimento.nombre }} ({{ alimento.kcal100g }} kcal/100g)
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Cantidad (g)</label>
+        <input class="form-input" type="number" [(ngModel)]="cantidadGramos" name="cantidad" min="1">
+      </div>
+
+      <div class="form-actions">
+        <button (click)="agregarAlimento()" class="btn btn-secondary btn-full">
+          <mat-icon>add</mat-icon>
+          <span>Agregar Alimento</span>
+        </button>
+        <button (click)="guardarComida()" [disabled]="loading" class="btn btn-primary btn-full">
+          <mat-icon *ngIf="!loading">save</mat-icon>
+          <span>{{ loading ? 'Guardando...' : 'Guardar Comida' }}</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Comidas registradas -->
+    <section class="card lista-card">
+      <h2 class="card-section-title"><mat-icon>list</mat-icon> Comidas registradas</h2>
+
+      <div *ngIf="comidas.length === 0" class="empty-state">
+        <mat-icon>no_meals</mat-icon>
+        <p>No hay comidas registradas para esta fecha</p>
+      </div>
+
+      <ul *ngIf="comidas.length > 0" class="comidas-list">
+        <li *ngFor="let comida of comidas" class="comida-item">
+          <div class="comida-info">
+            <span class="comida-badge">{{ comida.tipoComida }}</span>
+          </div>
+          <button (click)="eliminarComida(comida.idComida)" class="btn-icon-delete" title="Eliminar">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </li>
+      </ul>
+    </section>
+
   </div>
 </div>

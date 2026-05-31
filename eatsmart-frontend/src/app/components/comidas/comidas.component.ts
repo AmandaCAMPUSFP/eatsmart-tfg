@@ -8,11 +8,12 @@ import { AuthService } from '../../services/auth.service';
 import { Comida, ComidaDTO, ResumenDiario } from '../../models/comida.model';
 import { Alimento } from '../../models/alimento.model';
 import { PerfilNutricional } from '../../models/perfil-nutricional.model';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-comidas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './comidas.component.html',
   styleUrls: ['./comidas.component.scss']
 })
